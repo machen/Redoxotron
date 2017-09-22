@@ -3,6 +3,10 @@
 	{
 		"selected_items":
 		[
+			[
+				"T",
+				"Type"
+			]
 		]
 	},
 	"buffers":
@@ -21,26 +25,19 @@
 			"file": "Electrochemistry scripts/keithly_dmm.py",
 			"settings":
 			{
-				"buffer_size": 9270,
+				"buffer_size": 10114,
 				"encoding": "UTF-8",
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "Electrochemistry scripts/potentiostat_1.0.py",
+			"contents": "Python 3.6.1 |Continuum Analytics, Inc.| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]\nType 'copyright', 'credits' or 'license' for more information\nIPython 6.1.0 -- An enhanced Interactive Python. Type '?' for help.\n\nIn [1]: time.asctime(time.localtime(time.time()))\n---------------------------------------------------------------------------\nNameError                                 Traceback (most recent call last)\n<ipython-input-1-74fe71909444> in <module>()\n----> 1 time.asctime(time.localtime(time.time()))\n\nNameError: name 'time' is not defined\n\nIn [2]: import time\n\nIn [3]: time.asctime(time.localtime(time.time()))\nOut[3]: 'Fri Sep 22 17:30:47 2017'\n\nIn [4]: time.time\nOut[4]: <function time.time>\n\nIn [5]: time.time()\nOut[5]: 1506115854.5854306\n\nIn [6]: time.localtime(time.time())\nOut[6]: time.struct_time(tm_year=2017, tm_mon=9, tm_mday=22, tm_hour=17, tm_min=31, tm_sec=8, tm_wday=4, tm_yday=265, tm_isdst=1)\n\nIn [7]: x = time.asctime(time.localtime(time.time()))\n\nIn [8]: x\nOut[8]: 'Fri Sep 22 17:33:46 2017'\n\nIn [9]: x\nOut[9]: 'Fri Sep 22 17:33:46 2017'\n\nIn [10]: x\nOut[10]: 'Fri Sep 22 17:33:46 2017'\n\nIn [11]: time.asctime(time.localtime(time.time()))\nOut[11]: 'Fri Sep 22 17:34:07 2017'\n\nIn [12]: x = \"Hello \\n\"\n\nIn [13]: x.replace(\"\\n\",'')\nOut[13]: 'Hello '\n\nIn [14]: x\nOut[14]: 'Hello \\n'\n\nIn [15]: np.mean([0,0.0009,0.0009,0.0009,0.0009,0.0009])\n---------------------------------------------------------------------------\nNameError                                 Traceback (most recent call last)\n<ipython-input-15-9e6037703144> in <module>()\n----> 1 np.mean([0,0.0009,0.0009,0.0009,0.0009,0.0009])\n\nNameError: name 'np' is not defined\n\nIn [16]: import numpy as np\n\nIn [17]: np.mean([0,0.0009,0.0009,0.0009,0.0009,0.0009])\nOut[17]: 0.00074999999999999991\n\nIn [18]: x = np.array(), dtype, copy, order, subok, ndmin)\n  File \"<ipython-input-18-87368ae46223>\", line 1\n    x = np.array(), dtype, copy, order, subok, ndmin)\n                                                    ^\nSyntaxError: invalid syntax\n\n\nIn [19]: x = np.array()\n---------------------------------------------------------------------------\nTypeError                                 Traceback (most recent call last)\n<ipython-input-19-84aabb32ee17> in <module>()\n----> 1 x = np.array()\n\nTypeError: Required argument 'object' (pos 1) not found\n\nIn [20]: x = np.array([])\n\nIn [21]: x[0] = 1\n---------------------------------------------------------------------------\nIndexError                                Traceback (most recent call last)\n<ipython-input-21-1a754504edbf> in <module>()\n----> 1 x[0] = 1\n\nIndexError: index 0 is out of bounds for axis 0 with size 0\n\nIn [22]: x = np.zeros(5)\n\nIn [23]: x\nOut[23]: array([ 0.,  0.,  0.,  0.,  0.])\n\nIn [24]: x[0] = 1\n\nIn [25]: x[2] = 5\n\nIn [26]: x\nOut[26]: array([ 1.,  0.,  5.,  0.,  0.])\n\nIn [27]: x\nOut[27]: array([ 1.,  0.,  5.,  0.,  0.])\n\nIn [28]: x.type()\n---------------------------------------------------------------------------\nAttributeError                            Traceback (most recent call last)\n<ipython-input-28-48321333325c> in <module>()\n----> 1 x.type()\n\nAttributeError: 'numpy.ndarray' object has no attribute 'type'\n\nIn [29]: x.Type\n---------------------------------------------------------------------------\nAttributeError                            Traceback (most recent call last)\n<ipython-input-29-276b309ea0be> in <module>()\n----> 1 x.Type\n\nAttributeError: 'numpy.ndarray' object has no attribute 'Type'\n\nIn [30]: x = \"Hello \\n\"\n\nIn [31]: x.strip()\nOut[31]: 'Hello'\n\nIn [32]: ",
 			"settings":
 			{
-				"buffer_size": 5787,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "RedoxotronCodesAndAnalysis.sublime-project",
-			"settings":
-			{
-				"buffer_size": 96,
-				"encoding": "UTF-8",
-				"line_ending": "Unix"
+				"buffer_size": 3555,
+				"line_ending": "Windows",
+				"name": "*REPL* [python]",
+				"scratch": true
 			}
 		}
 	],
@@ -67,17 +64,29 @@
 	"build_varint": "",
 	"command_palette":
 	{
-		"height": 203.0,
-		"last_filter": "",
+		"height": 137.0,
+		"last_filter": "repl ipytho",
 		"selected_items":
 		[
 			[
-				"repl ipython",
-				"SublimeREPL: Python - IPython"
+				"repl ipytho",
+				"SublimeREPL: Anaconda - IPython"
+			],
+			[
+				"list package",
+				"Package Control: List Packages"
 			],
 			[
 				"package instal",
 				"Package Control: Install Package"
+			],
+			[
+				"browse",
+				"Preferences: Browse Packages"
+			],
+			[
+				"repl ipython",
+				"SublimeREPL: Python - IPython"
 			],
 			[
 				"package control",
@@ -118,10 +127,6 @@
 			[
 				"repl",
 				"Bookmarks: Select Previous"
-			],
-			[
-				"browse",
-				"Preferences: Browse Packages"
 			],
 			[
 				"package control: install",
@@ -205,15 +210,21 @@
 	],
 	"file_history":
 	[
+		"/C/Users/Michael/Dropbox (Personal)/work/MIT Graduate Work/Research/RadiumSorption/Surface Complexation/PHREEQC Modeling/pyPHREEQC.py",
+		"/C/Users/Michael/Dropbox (Personal)/work/MIT Graduate Work/Research/Redoxotron/Electrochemistry Scripts/potentiostat_1.0.py",
+		"/C/Users/Michael/Dropbox (Personal)/work/MIT Graduate Work/Research/Redoxotron/RedoxotronCodesAndAnalysis.sublime-project",
+		"/C/Users/Michael/Dropbox (Personal)/work/MIT Graduate Work/Research/RadiumSorption/ThoriumSeriesDecayModel.py",
+		"/C/Users/Michael/Miniconda3/lib/site-packages/matplotlib/pyplot.py",
+		"/C/Users/Michael/Dropbox (Personal)/work/MIT Graduate Work/Research/Redoxotron/Electrochemistry scripts/potentiostat_1.0.py",
+		"/C/Users/Michael/AppData/Roaming/Sublime Text 3/Packages/User/NewWindow-IPython.sublime-build",
+		"/C/Users/Michael/AppData/Roaming/Sublime Text 3/Packages/User/SublimeREPL-IPython.sublime-build",
 		"/C/Users/Michael/Dropbox (Personal)/work/MIT Graduate Work/Research/Redoxotron/Data/Cr-Hematite_C-Ferrocyanide Redoxotron Results.xlsx",
 		"/C/Users/Michael/Dropbox (Personal)/work/MIT Graduate Work/Research/Redoxotron/Electrochemistry scripts/keithly_dmm.py",
 		"/C/Users/Michael/Dropbox (Personal)/work/MIT Graduate Work/Research/Redoxotron/Electrochemistry scripts/potentiostat/V1.0/potentiostat_1.0.py",
 		"/C/Users/Michael/Dropbox (Personal)/work/MIT Graduate Work/Research/Redoxotron/Electrochemistry scripts/multimeter/V1.0/keithly_dmm.py",
-		"/C/Users/Michael/AppData/Roaming/Sublime Text 3/Packages/User/SublimeREPL-IPython.sublime-build",
 		"/C/Users/Michael/AppData/Roaming/Sublime Text 3/Packages/SublimeREPL/config/Python/Main.sublime-menu",
 		"/C/Users/Michael/AppData/Roaming/Sublime Text 3/Packages/User/SublimeREPL.sublime-settings",
 		"/C/Users/Michael/AppData/Roaming/Sublime Text 3/Packages/SublimeREPL/SublimeREPL.sublime-settings",
-		"/C/Users/Michael/Dropbox (Personal)/work/MIT Graduate Work/Research/Redoxotron/RedoxotronCodesAndAnalysis.sublime-project",
 		"/C/Users/Michael/AppData/Roaming/Sublime Text 3/Packages/SublimeREPL/config/Python/Main.sublime-menuORIGINAL.sublime-menu",
 		"/C/Users/Michael/AppData/Roaming/Sublime Text 3/Packages/User/Package Control.sublime-settings",
 		"/C/Users/Michael/AppData/Roaming/Sublime Text 3/Packages/SublimeREPL/config/Python/ipy_repl.py",
@@ -221,7 +232,7 @@
 	],
 	"find":
 	{
-		"height": 40.0
+		"height": 27.0
 	},
 	"find_in_files":
 	{
@@ -235,6 +246,15 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"measurementNumber",
+			"measType",
+			"x",
+			"    \n",
+			"voltagemeas",
+			"plot_initime",
+			"measurenum",
+			"requries",
+			"number_of_measurement_types"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -290,15 +310,15 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 9270,
+						"buffer_size": 10114,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								1923,
-								1923
+								4113,
+								4113
 							]
 						],
 						"settings":
@@ -309,77 +329,127 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 0,
-					"type": "text"
-				},
-				{
-					"buffer": 2,
-					"file": "Electrochemistry scripts/potentiostat_1.0.py",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 5787,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								0,
-								0
-							]
-						],
-						"settings":
-						{
-							"show_definitions": false,
-							"syntax": "Packages/Python/Python.sublime-syntax",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 2641.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 2,
 					"type": "text"
-				},
+				}
+			]
+		},
+		{
+			"selected": 0,
+			"sheets":
+			[
 				{
-					"buffer": 3,
-					"file": "RedoxotronCodesAndAnalysis.sublime-project",
+					"buffer": 1,
+					"file": "Electrochemistry scripts/keithly_dmm.py",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 96,
+						"buffer_size": 10114,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								1,
-								1
+								973,
+								973
 							]
 						],
 						"settings":
 						{
-							"syntax": "Packages/JavaScript/JSON.sublime-syntax"
+							"show_definitions": false,
+							"syntax": "Packages/Python/Python.sublime-syntax",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 114.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				}
+			]
+		},
+		{
+			"selected": 0,
+			"sheets":
+			[
+				{
+					"buffer": 2,
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 3555,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								3555,
+								3555
+							]
+						],
+						"settings":
+						{
+							"auto_complete": true,
+							"auto_indent": false,
+							"detect_indentation": false,
+							"gutter": false,
+							"history_arrows": true,
+							"indent_subsequent_lines": false,
+							"line_numbers": false,
+							"repl": true,
+							"repl_external_id": "python",
+							"repl_id": "bd7b403cc716400998d285f0fe498dd2",
+							"repl_restart_args":
+							{
+								"autocomplete_server": true,
+								"cmd":
+								[
+									"C:/Users/Michael/Miniconda3/Scripts/ipython",
+									"--colors=NoColor"
+								],
+								"cwd": "$file_path",
+								"encoding": "utf8",
+								"extend_env":
+								{
+									"PYTHONIOENCODING": "utf-8",
+									"SUBLIMEREPL_EDITOR": "\"python\""
+								},
+								"external_id": "python",
+								"syntax": "Packages/Python/Python.tmLanguage",
+								"type": "subprocess"
+							},
+							"repl_sublime2": false,
+							"show_definitions": false,
+							"smart_indent": false,
+							"spell_check": false,
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 2187.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 1,
 					"type": "text"
 				}
 			]
+		},
+		{
+			"sheets":
+			[
+			]
 		}
 	],
 	"incremental_find":
 	{
-		"height": 0.0
+		"height": 27.0
 	},
 	"input":
 	{
@@ -394,16 +464,36 @@
 				0,
 				1,
 				1
+			],
+			[
+				1,
+				0,
+				2,
+				1
+			],
+			[
+				0,
+				1,
+				1,
+				2
+			],
+			[
+				1,
+				1,
+				2,
+				2
 			]
 		],
 		"cols":
 		[
 			0.0,
+			0.5,
 			1.0
 		],
 		"rows":
 		[
 			0.0,
+			0.7,
 			1.0
 		]
 	},
@@ -416,11 +506,11 @@
 	{
 		"height": 0.0
 	},
-	"pinned_build_system": "Packages/User/SublimeREPL-IPython.sublime-build",
+	"pinned_build_system": "Packages/User/NewWindow-IPython.sublime-build",
 	"project": "RedoxotronCodesAndAnalysis.sublime-project",
 	"replace":
 	{
-		"height": 0.0
+		"height": 50.0
 	},
 	"save_all_on_build": true,
 	"select_file":
@@ -450,7 +540,7 @@
 		],
 		"width": 0.0
 	},
-	"selected_group": 0,
+	"selected_group": 1,
 	"settings":
 	{
 	},

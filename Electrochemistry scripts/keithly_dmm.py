@@ -1,11 +1,33 @@
 import visa
+import sys
 import time
 import numpy as np
 import matplotlib.pyplot as plt
 import usbtmc
 
-#note:  Power-cycle keithley prior to re-starting long experiment...
+"""TO DO LIST:
+1) With the readings 0.000904, 0.000904, 0.000903, 0.000905, 0.000904 gets 0.000703 as average
+2) Enable variable timing
+3) Prevent and log errors encountered by multimeter during run
+4) Clean up code
+"""
+
+# note:  Power-cycle keithley prior to re-starting long experiment...
 # Run this program as root (sudo idle3) or it probably won't work!
+
+
+def takeMeasurement(device, measNum, nMeas, measType="voltage:dc"):
+    measurements = np.empty(nMeas, dtype=float)
+    measTime = time.asctime(time.localtime(time.time))
+    print('\n'+measType+' measurement number: {:d}'.format(measNum))
+    print('Measurement time: {:s}'.format(measTime))
+    print('Starting Voltage Measurements')
+    for i in range(nMeas):
+        try:
+            currentMeas = device.query("measure:{}?".format(measType))
+            currentMeas = currentMeas.strip()  # Does this work??
+
+
 
 rm = visa.ResourceManager('@py')
 print(rm.list_resources())
@@ -15,49 +37,43 @@ time.sleep(1)
 keithley.write('*rst')
 time.sleep(1)
 
-#Change this stuff......############################################
+""" USER DEFINED INPUTS GO HERE """
+plotvolt = True  # Plot voltage data in real-time?
+loopvals = True  # print measurements in loop
 
-#plot voltage data in real-time?
-plotvolt=True
+""" Choose measurements (set to True to enable measurement).
+    Note that the multimeter must be set up to take said measurements!"""
 
-#print measurements in loop
+nMeasureTypes = 1
+resistancemeas = False
+currentmeas = False
+voltageMeas = True
 
-loopvals=True
+countdown_timer = 5  # Sets interval for announcing next measurement
 
-#choose measurements (set to True to enable measurement).
-
-number_of_measurement_types=1
-resistancemeas=False
-currentmeas=False
-voltagemeas=True
-
-#set interval for countdown timer (seconds) 30
-
-countdown_timer=5 #Seconds
-
-#experiment time  36000 (total seconds...set to ridiculously high number--like 999999999999 if you don't know, then just terminate program when done (remember to power-cycle keithley)
-
-totaltime=3600 #Seconds
-
-#seconds between measurements (long times?) 1800
-tCycles = 15
-#number of measurements at each point
-numpoints = 5
-#pause (in seconds) between measurements. use value of 0.05 or greater to ensure stable measurements
-pauseMeasure=0.2
+totaltime = 3600  # Experimental time length in seconds, more time->longer run.
+tCycles = 15  # Time in seconds between measurements
+numpoints = 5  # Number of measurements to average at each point
+# Seconds between measurements. Stability requries 0.05 sec or greater.
+pauseMeasure = 0.2
 
 
-# exits program if data collection time exceeds time between measurements
+""" Estimates the time measurements should take, and exits if the estimate
+    is larger than the time between measurements (tCycles) """
 
-estMeasTime = ((pauseMeasure+1.25)*number_of_measurement_types*numpoints)+6 #multiplied by 3 = fudge factor
-print ("data collection time is guessed to be %d seconds, time between datapoints is %d seconds"%(estMeasTime, tCycles))
+estMeasTime = ((pauseMeasure+1.25)
+               * nMeasureTypes * numpoints)+6  # Multiplied by 3 = fudge factor
+print("data collection time is guessed to be %d seconds,",
+      " time between datapoints is %d seconds" % (estMeasTime, tCycles))
 if tCycles >= estMeasTime:
-    print ("data collection scheme ok, starting in 5 seconds")
+    print("data collection scheme ok, starting in 5 seconds")
     time.sleep(5)
 
 else:
-    print("not enough time to collect %d measurments between %d second intervals \n"%(numpoints,tCycles))
-    print("increase seconds between measurements or lower number of replicates per point \n")
+    print("not enough time to collect %d measurments",
+          "between %d second intervals \n" % (numpoints, tCycles))
+    print("increase seconds between measurements",
+          " or lower number of replicates per point \n")
     print("closing in 5 seconds....")
     time.sleep(5)
     print("Exiting with error. goodbye....")
@@ -66,46 +82,47 @@ else:
     exit()
 
 
-#don't change anything from here on.......#################################
-floattime=time.time()
-initialtime=time.time()
-resistance=[()]
-voltage=[()]
-current=[()]
+""" USER NON-SERVICABLE PARTS """
+
+floattime = time.time()
+initialtime = time.time()
+resistance = [()]
+voltage = [()]
+current = [()]
 
 
 time.sleep(2)
-print ("initial test measurement...")
+print("initial test measurement...")
 
 voltage = keithley.query("measure:voltage:dc?")
 if voltage == "":
-    print ("problem with Keithley. Stopping program in 5 seconds. ")
-    print ("power cycle Keithly and re-start program")
+    print("problem with Keithley. Stopping program in 5 seconds. ")
+    print("power cycle Keithly and re-start program")
     time.sleep(5)
     print("Exiting with error. goodbye....")
     keithley.write('system:local')
     keithley.close()
     exit()
 
-print ("equipment ok, starting data collection\n")
+print("equipment ok, starting data collection\n")
 time.sleep(2)
 
-print ("starting initial measurement\n")
+print("starting initial measurement\n")
 time.sleep(1)
 
 
-measurenum=0
+measureNum = 0  # Marker for the measurement you're on
 
-voltoutput=[(),(),()]
-tempvals=[(0)]
-v=[(),(),()]
-c=[(),(),()]
-r=[(),(),()]
-q=[]
+voltoutput = [(), (), ()]  # WTF IS THIS
+tempvals = [(0)]  # WTF IS THIS
+v = [(), (), ()]  # WTF IS THIS
+c = [(), (), ()]  # WTF IS THIS
+r = [(), (), ()]  # WTF IS THIS
+q = []  # WTF IS THIS
 
-#declare plotting variables
+# Declare plotting variables
 
-plot_initime=time.time()
+plotInitialTime = time.time()
 xvals = ([0])
 yvals = ([0])
 stderrlist = ([0])
@@ -113,24 +130,21 @@ xmin = ([0])
 ymin = ([0])
 ymax = ([0])
 
-plt.ion()
+plt.ion()  # Turns matplotlib interactive mode on.
 
 while True:
+    # Initialize times
+    if measureNum == 0 or time.time() >= floattime:
+        floattime = time.time()+tCycles
+        currtime = time.asctime(time.localtime(time.time()))
+        currtimeplain = time.time()
 
-    
-    if measurenum==0 or time.time()>=floattime:
-        
-        floattime=time.time()+tCycles
-        currtime=time.asctime(time.localtime(time.time()))
-        currtimeplain=time.time()
-
-        if voltagemeas==True:
-            
-            print ('\nvoltage measurement number: %d'%measurenum)
-            print ('measurement time: %s'%time.asctime(time.localtime(time.time())))
-            print ('starting voltage measurements')
-            
-            for i in range(numpoints):            
+        if voltageMeas:
+            print('\nvoltage measurement number: %d' % measureNum)
+            print('measurement time: %s' %
+                  time.asctime(time.localtime(time.time())))
+            print('starting voltage measurements')
+            for i in range(numpoints):
                 voltemp = keithley.query("measure:voltage:dc?")
                 voltemp2 = voltemp.replace("\n","")
                 try:
@@ -138,8 +152,7 @@ while True:
                     tempvals.append(voltage)
                 except:
                     print("exception: problem reading instrument, or non-float value returned. data not recorded")
-                    
-                if loopvals ==True:
+                if loopvals == True:
                     try:
                         print ("reading#%d: %f"%(i,voltage))
                     except:
@@ -154,20 +167,16 @@ while True:
             v = [(voltage_numpoints),(voltage_average),(voltage_sd)]
             tempvals=[(0)]
             time.sleep(2)
-            
         if currentmeas==True:
-            
-            print ('\n\ncurrent measurement number: %d'%measurenum)
+            print ('\n\ncurrent measurement number: %d'%measureNum)
             print ('measurement time: %s'%time.asctime(time.localtime(time.time())))
             print ('starting current measurements')
-            
             for i in range(numpoints):
-
                 currentemp = keithley.query("measure:current:dc?")
-                currentemp2=currentemp.replace("\n","")
+                currentemp2 =currentemp.replace("\n","")
                 
                 try:
-                    current = float(currenttemp2)
+                    current = float(currentemp2)
                     tempvals.append(current)
                 except:
                     print("exception: problem reading instrument, or non-float value returned. data not recorded")
@@ -191,7 +200,7 @@ while True:
             
         if resistancemeas==True:
             
-            print ('\n\nresistance measurement number: %d'%measurenum)
+            print ('\n\nresistance measurement number: %d'%measureNum)
             print ('measurement time: %s'%time.asctime(time.localtime(time.time())))
             print ('starting resistance measurements')
             
@@ -221,7 +230,7 @@ while True:
             time.sleep(2)
  
             
-        measurenum+=1
+        measureNum+=1
         newvals=[(currtime),(floattime),(v),(c),(r)]
         #q.append(newvals)
         #print (q)
@@ -240,7 +249,7 @@ while True:
         ##plot voltage values as they come in
 
         if plotvolt==True:
-            plottime=(time.time())-(plot_initime)
+            plottime=(time.time())-(plotInitialTime)
             xvals.append(plottime)
             yvals.append(voltage_average)
             stderrlist.append(voltage_sd)
