@@ -9,7 +9,8 @@ import usbtmc
 1) With the readings 0.000904, 0.000904, 0.000903, 0.000905, 0.000904 gets 0.000703 as average
 2) Enable variable timing
 3) Prevent and log errors encountered by multimeter during run
-4) Clean up code
+4) Catch KeyboardInterrupt in main loop and close resource on interrupt
+5) Clean up code
 """
 
 # note:  Power-cycle keithley prior to re-starting long experiment...
