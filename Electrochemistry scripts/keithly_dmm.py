@@ -1,9 +1,8 @@
 import visa
-import sys
+import os
 import time
 import numpy as np
 import matplotlib.pyplot as plt
-import usbtmc
 
 """TO DO LIST:
 1) With the readings 0.000904, 0.000904, 0.000903, 0.000905, 0.000904 gets 0.000703 as average
@@ -17,17 +16,39 @@ import usbtmc
 # Run this program as root (sudo idle3) or it probably won't work!
 
 
-def takeMeasurement(device, measNum, nMeas, measType="voltage:dc"):
+def takeMeasurement(device, measNum, nMeas, pauseLen, printVal=True,
+                    measType="voltage:dc"):
     measurements = np.empty(nMeas, dtype=float)
-    measTime = time.asctime(time.localtime(time.time))
+    measTime = time.asctime(time.localtime(time.time()))
     print('\n'+measType+' measurement number: {:d}'.format(measNum))
     print('Measurement time: {:s}'.format(measTime))
-    print('Starting Voltage Measurements')
+    print('Starting {:s} measurements').format(measType)
     for i in range(nMeas):
+        # Try to format and append the current measurement, continue otherwise
         try:
-            currentMeas = device.query("measure:{}?".format(measType))
-            currentMeas = currentMeas.strip()  # Does this work??
-
+            currMeas = device.query("measure:{}?".format(measType))
+            currMeas = currMeas.strip()  # Does this work??
+            currMeas = float(currMeas)
+            measurements[i] = currMeas
+            if printVal:
+                print("Reading#:{:d}: {:f}".format(i, currMeas))
+        except ValueError:
+            print("Non-float value returned. No data recorded.")
+            measurements[i] = np.nan
+            continue
+        except:
+            print("Exception: Instrument Read problem.",
+                  "No data recorded. Do you have the right command?")
+            measurements[i] = np.nan
+            continue
+        finally:
+            time.sleep(pauseLen)
+    realMeas = measurements[~np.isnan(measurements)]  # Strip out error Nan
+    [measAvg, measStd, measSize] = [np.mean(realMeas), np.std(realMeas),
+                                    len(realMeas)]
+    print("\n Average: {:f}, standard dev: {:f}, number of measurements: {:d}"
+          .format(measAvg, measStd, measSize))
+    return measAvg, measStd, measSize
 
 
 rm = visa.ResourceManager('@py')
