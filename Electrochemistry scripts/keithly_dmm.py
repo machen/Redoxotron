@@ -19,17 +19,18 @@ def takeMeasurement(device, measNum, nMeas, pauseLen, printVal=True,
     measurements = np.empty(nMeas, dtype=float)
     measTime = time.asctime(time.localtime(time.time()))
     print('\n'+measType+' measurement number: {:d}'.format(measNum))
-    print('Measurement time: {:s}'.format(measTime))
-    print('Starting {:s} measurements').format(measType)
+    print('Measurement time: {}'.format(measTime))
+    print('Starting {} measurements'.format(measType))
     for i in range(nMeas):
         # Try to format and append the current measurement, continue otherwise
         try:
             currMeas = device.query("measure:{}?".format(measType))
             currMeas = currMeas.strip()  # Does this work??
+            print(currMeas)
             currMeas = float(currMeas)
             measurements[i] = currMeas
             if printVal:
-                print("Reading#:{:d}: {:f}".format(i, currMeas))
+                print("Reading #{:d}: {:e}".format(i, currMeas))
         except ValueError:
             print("Non-float value returned. No data recorded.")
             measurements[i] = np.nan
@@ -44,7 +45,7 @@ def takeMeasurement(device, measNum, nMeas, pauseLen, printVal=True,
     realMeas = measurements[~np.isnan(measurements)]  # Strip out error Nan
     [measAvg, measStd, measSize] = [np.mean(realMeas), np.std(realMeas),
                                     len(realMeas)]
-    print("\n Average: {:f}, standard dev: {:f}, number of measurements: {:d}"
+    print("\nAverage: {:0.2e}, Std Dev: {:0.2e}, No. of Measurements: {:d}"
           .format(measAvg, measStd, measSize))
     return measTime, [measAvg, measStd, measSize]
 
@@ -69,13 +70,13 @@ resMeas = False
 currentMeas = False
 voltageMeas = True
 
-countdownTime = 5  # Sets interval for announcing next measurement
+countdownTime = 60  # Sets interval for announcing next measurement
 
 expTimeLength = 3600  # Script run time in seconds
-tCycles = 15  # Time in seconds between measurements
+tCycles = 30  # Time in seconds between measurements
 numpoints = 5  # Number of measurements to average at each point
 # Seconds between measurements. Stability requries 0.05 sec or greater.
-pauseMeasure = 0.2
+pauseMeasure = 0.5
 
 
 """ Estimates the time measurements should take, and exits if the estimate
@@ -83,10 +84,10 @@ pauseMeasure = 0.2
 
 estMeasTime = ((pauseMeasure+1.25)
                * nMeasureTypes * numpoints)+6  # Multiplied by 3 = fudge factor
-print("data collection time is guessed to be %d seconds,",
-      " time between datapoints is %d seconds" % (estMeasTime, tCycles))
+print("Data collection time estimate: {:0.2f} seconds,".format(estMeasTime),
+      " time between datapoints is {:0.2f} seconds".format(tCycles))
 if tCycles >= estMeasTime:
-    print("data collection scheme ok, starting in 5 seconds")
+    print("Data collection scheme ok, starting in 5 seconds")
     time.sleep(5)
 
 else:
@@ -174,17 +175,17 @@ while True:
         data.to_csv('data.csv')
         print("Complete!")
         actualMeasTime = ((time.time())-measStartTime)
-        print("All measurements required a total of {:f} seconds\n".format(
+        print("All measurements required a total of {:0.2f} seconds\n".format(
               actualMeasTime))
         timeToNextMeas = (timeNextPoint-(time.time()))
-        print("{:d} seconds until next round of measurements".format(
+        print("{:0.2f} seconds until next round of measurements".format(
               timeToNextMeas))
         timeRemaining = timeToNextMeas-countdownTime
 
         # Plot voltage values live. Requires voltageMeas to be true!
 
         if plotVolt:
-            timeVals.append(t)
+            timeVals.append(pd.to_datetime(t))
             voltageVals.append(tempMeas[0])
             stdErrVals.append(tempMeas[1])
             [xmin, xmax] = [min(timeVals), max(timeVals)]
@@ -202,12 +203,12 @@ while True:
         break
 
     elif timeNextPoint-time.time() <= timeRemaining:
-        endtime = (initialTime+expTimeLength)-(time.time())
-        print("{:d} seconds before next measurement,".format(timeRemaining),
-              " and {:d} seconds before end of experiment".format(endtime))
+        endTime = (initialTime+expTimeLength)-(time.time())
+        print("{:0.2f} seconds before next measurement,".format(timeRemaining),
+              " and {:0.2f} seconds before end of experiment".format(endTime))
         timeRemaining -= countdownTime
 
-print("Elapsed time: {:f} seconds".format(timeNextPoint-initialTime))
+print("Elapsed time: {:0.2f} seconds".format(timeNextPoint-initialTime))
 print("Normal exit. Goodbye....")
 keithley.write('system:local')
 keithley.close()

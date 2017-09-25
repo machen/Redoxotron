@@ -4,6 +4,10 @@
 		"selected_items":
 		[
 			[
+				"meas",
+				"measType\tparam"
+			],
+			[
 				"T",
 				"Type"
 			]
@@ -25,16 +29,16 @@
 			"file": "Electrochemistry scripts/keithly_dmm.py",
 			"settings":
 			{
-				"buffer_size": 10114,
+				"buffer_size": 7832,
 				"encoding": "UTF-8",
-				"line_ending": "Unix"
+				"line_ending": "Windows"
 			}
 		},
 		{
-			"contents": "Python 3.6.1 |Continuum Analytics, Inc.| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]\nType 'copyright', 'credits' or 'license' for more information\nIPython 6.1.0 -- An enhanced Interactive Python. Type '?' for help.\n\nIn [1]: time.asctime(time.localtime(time.time()))\n---------------------------------------------------------------------------\nNameError                                 Traceback (most recent call last)\n<ipython-input-1-74fe71909444> in <module>()\n----> 1 time.asctime(time.localtime(time.time()))\n\nNameError: name 'time' is not defined\n\nIn [2]: import time\n\nIn [3]: time.asctime(time.localtime(time.time()))\nOut[3]: 'Fri Sep 22 17:30:47 2017'\n\nIn [4]: time.time\nOut[4]: <function time.time>\n\nIn [5]: time.time()\nOut[5]: 1506115854.5854306\n\nIn [6]: time.localtime(time.time())\nOut[6]: time.struct_time(tm_year=2017, tm_mon=9, tm_mday=22, tm_hour=17, tm_min=31, tm_sec=8, tm_wday=4, tm_yday=265, tm_isdst=1)\n\nIn [7]: x = time.asctime(time.localtime(time.time()))\n\nIn [8]: x\nOut[8]: 'Fri Sep 22 17:33:46 2017'\n\nIn [9]: x\nOut[9]: 'Fri Sep 22 17:33:46 2017'\n\nIn [10]: x\nOut[10]: 'Fri Sep 22 17:33:46 2017'\n\nIn [11]: time.asctime(time.localtime(time.time()))\nOut[11]: 'Fri Sep 22 17:34:07 2017'\n\nIn [12]: x = \"Hello \\n\"\n\nIn [13]: x.replace(\"\\n\",'')\nOut[13]: 'Hello '\n\nIn [14]: x\nOut[14]: 'Hello \\n'\n\nIn [15]: np.mean([0,0.0009,0.0009,0.0009,0.0009,0.0009])\n---------------------------------------------------------------------------\nNameError                                 Traceback (most recent call last)\n<ipython-input-15-9e6037703144> in <module>()\n----> 1 np.mean([0,0.0009,0.0009,0.0009,0.0009,0.0009])\n\nNameError: name 'np' is not defined\n\nIn [16]: import numpy as np\n\nIn [17]: np.mean([0,0.0009,0.0009,0.0009,0.0009,0.0009])\nOut[17]: 0.00074999999999999991\n\nIn [18]: x = np.array(), dtype, copy, order, subok, ndmin)\n  File \"<ipython-input-18-87368ae46223>\", line 1\n    x = np.array(), dtype, copy, order, subok, ndmin)\n                                                    ^\nSyntaxError: invalid syntax\n\n\nIn [19]: x = np.array()\n---------------------------------------------------------------------------\nTypeError                                 Traceback (most recent call last)\n<ipython-input-19-84aabb32ee17> in <module>()\n----> 1 x = np.array()\n\nTypeError: Required argument 'object' (pos 1) not found\n\nIn [20]: x = np.array([])\n\nIn [21]: x[0] = 1\n---------------------------------------------------------------------------\nIndexError                                Traceback (most recent call last)\n<ipython-input-21-1a754504edbf> in <module>()\n----> 1 x[0] = 1\n\nIndexError: index 0 is out of bounds for axis 0 with size 0\n\nIn [22]: x = np.zeros(5)\n\nIn [23]: x\nOut[23]: array([ 0.,  0.,  0.,  0.,  0.])\n\nIn [24]: x[0] = 1\n\nIn [25]: x[2] = 5\n\nIn [26]: x\nOut[26]: array([ 1.,  0.,  5.,  0.,  0.])\n\nIn [27]: x\nOut[27]: array([ 1.,  0.,  5.,  0.,  0.])\n\nIn [28]: x.type()\n---------------------------------------------------------------------------\nAttributeError                            Traceback (most recent call last)\n<ipython-input-28-48321333325c> in <module>()\n----> 1 x.type()\n\nAttributeError: 'numpy.ndarray' object has no attribute 'type'\n\nIn [29]: x.Type\n---------------------------------------------------------------------------\nAttributeError                            Traceback (most recent call last)\n<ipython-input-29-276b309ea0be> in <module>()\n----> 1 x.Type\n\nAttributeError: 'numpy.ndarray' object has no attribute 'Type'\n\nIn [30]: x = \"Hello \\n\"\n\nIn [31]: x.strip()\nOut[31]: 'Hello'\n\nIn [32]: ",
+			"contents": "Python 3.6.1 |Continuum Analytics, Inc.| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]\nType 'copyright', 'credits' or 'license' for more information\nIPython 6.1.0 -- An enhanced Interactive Python. Type '?' for help.\n\nIn [1]: ",
 			"settings":
 			{
-				"buffer_size": 3555,
+				"buffer_size": 241,
 				"line_ending": "Windows",
 				"name": "*REPL* [python]",
 				"scratch": true
@@ -64,10 +68,18 @@
 	"build_varint": "",
 	"command_palette":
 	{
-		"height": 137.0,
-		"last_filter": "repl ipytho",
+		"height": 234.0,
+		"last_filter": "ipython",
 		"selected_items":
 		[
+			[
+				"ipython",
+				"SublimeREPL: Anaconda - IPython"
+			],
+			[
+				"repl ipy",
+				"SublimeREPL: Anaconda - IPython"
+			],
 			[
 				"repl ipytho",
 				"SublimeREPL: Anaconda - IPython"
@@ -95,10 +107,6 @@
 			[
 				"packages",
 				"Package Control: List Packages"
-			],
-			[
-				"repl ipy",
-				"SublimeREPL: Python - IPython"
 			],
 			[
 				"repl ip",
@@ -138,10 +146,6 @@
 			],
 			[
 				"ipy",
-				"SublimeREPL: Python - IPython"
-			],
-			[
-				"ipython",
 				"SublimeREPL: Python - IPython"
 			],
 			[
@@ -185,7 +189,7 @@
 				"Package Control: List Packages"
 			]
 		],
-		"width": 436.0
+		"width": 444.0
 	},
 	"console":
 	{
@@ -205,11 +209,11 @@
 	},
 	"expanded_folders":
 	[
-		"/C/Users/Michael/Dropbox (Personal)/work/MIT Graduate Work/Research/Redoxotron/Electrochemistry Scripts",
-		"/C/Users/Michael/Dropbox (Personal)/work/MIT Graduate Work/Research/Redoxotron/Data"
+		"/C/Users/Michael/Documents/ResearchCode/Redoxotron/Electrochemistry Scripts"
 	],
 	"file_history":
 	[
+		"/C/Users/Michael/Documents/ResearchCode/Redoxotron/Electrochemistry scripts/TestFile.py",
 		"/C/Users/Michael/Dropbox (Personal)/work/MIT Graduate Work/Research/RadiumSorption/Surface Complexation/PHREEQC Modeling/pyPHREEQC.py",
 		"/C/Users/Michael/Dropbox (Personal)/work/MIT Graduate Work/Research/Redoxotron/Electrochemistry Scripts/potentiostat_1.0.py",
 		"/C/Users/Michael/Dropbox (Personal)/work/MIT Graduate Work/Research/Redoxotron/RedoxotronCodesAndAnalysis.sublime-project",
@@ -246,6 +250,35 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"currtimeplain",
+			"d",
+			"initialtime",
+			"totaltime",
+			"voltTimePoints",
+			"plotTimePoints",
+			"])\n",
+			"stderrlist",
+			"axes",
+			"timeToNextMeas",
+			"yvals",
+			"xvals",
+			"plottime",
+			"plotInitialTime",
+			"countdown_timer",
+			"countdown",
+			"newround",
+			"thisround",
+			"loopvals",
+			"plottime",
+			"plotvolt",
+			"initialtime",
+			"InitialTime",
+			"initialtime",
+			"floattime",
+			"resistancemeas",
+			"currentmeas",
+			" time.sleep(pa",
+			"currentmeas",
 			"measurementNumber",
 			"measType",
 			"x",
@@ -310,15 +343,15 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 10114,
+						"buffer_size": 7832,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								4113,
-								4113
+								271,
+								271
 							]
 						],
 						"settings":
@@ -329,10 +362,10 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 2641.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 2,
+					"stack_index": 0,
 					"type": "text"
 				}
 			]
@@ -347,15 +380,15 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 10114,
+						"buffer_size": 7832,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								973,
-								973
+								4135,
+								4135
 							]
 						],
 						"settings":
@@ -365,11 +398,11 @@
 							"tab_size": 4,
 							"translate_tabs_to_spaces": true
 						},
-						"translation.x": 0.0,
-						"translation.y": 114.0,
+						"translation.x": 32.0,
+						"translation.y": 171.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 0,
+					"stack_index": 2,
 					"type": "text"
 				}
 			]
@@ -383,15 +416,15 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 3555,
+						"buffer_size": 241,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								3555,
-								3555
+								241,
+								241
 							]
 						],
 						"settings":
@@ -405,7 +438,7 @@
 							"line_numbers": false,
 							"repl": true,
 							"repl_external_id": "python",
-							"repl_id": "bd7b403cc716400998d285f0fe498dd2",
+							"repl_id": "f081e5964bb14973b5f67a6cccc71b47",
 							"repl_restart_args":
 							{
 								"autocomplete_server": true,
@@ -433,7 +466,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 2187.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 1,
@@ -493,7 +526,7 @@
 		"rows":
 		[
 			0.0,
-			0.7,
+			0.688717948718,
 			1.0
 		]
 	},
@@ -540,7 +573,7 @@
 		],
 		"width": 0.0
 	},
-	"selected_group": 1,
+	"selected_group": 0,
 	"settings":
 	{
 	},
