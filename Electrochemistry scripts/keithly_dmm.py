@@ -52,16 +52,8 @@ def takeMeasurement(device, measNum, nMeas, pauseLen, printVal=True,
     return measTime, [measAvg, measStd, measSize]
 
 
-# Initialize the multimeter, clear and reset
-rm = visa.ResourceManager('@py')
-print(rm.list_resources())
-keithley = rm.open_resource('USB0::1510::8448::8004460::0::INSTR')
-keithley.write('*cls')
-time.sleep(1)
-keithley.write('*rst')
-time.sleep(1)
-
 """ USER DEFINED INPUTS GO HERE """
+
 plotVolt = True  # Plot voltage data in real-time?
 printVals = True  # print measurements in loop
 
@@ -75,10 +67,10 @@ voltageMeas = True
 
 countdownTime = 60  # Sets interval for announcing next measurement
 
-expTimeLength = 24*60*60  # Script run time in seconds
+expTimeLength = 12*60*60  # Script run time in seconds
 # Specify an array with initial times as an iterable
-initialTCycle = np.concatenate([np.ones(50)*30, np.ones(25)*120])
-finalTCycle = 300  # Final time interval in seconds
+initialTCycle = np.concatenate([np.ones(20)*120, np.ones(20)*300])
+finalTCycle = 30*60  # Final time interval in seconds
 tCycles = iter(initialTCycle)  # Iterable with the time between samples
 nMeas = 5  # Number of measurements to average at each point
 # Seconds between measurements. Stability requires at least 0.2 sec or greater.
@@ -86,15 +78,24 @@ pauseMeasure = 0.5
 
 """ USER NON-SERVICABLE PARTS """
 
+# Initialize the multimeter, clear and reset
+rm = visa.ResourceManager('@py')
+print(rm.list_resources())
+keithley = rm.open_resource('USB0::1510::8448::8004460::0::INSTR')
+keithley.write('*cls')
+time.sleep(1)
+keithley.write('*rst')
+time.sleep(1)
+
 """ Estimates the time measurements should take, and exits if the estimate
     is larger than the time between measurements (tCycles) """
 
 estMeasTime = ((pauseMeasure+1.25)
                * nMeasureTypes * nMeas)+6  # Includes small fudge factor
-print("Data collection time estimate: {:0.2f} seconds,".format(estMeasTime),
-      " time between datapoints is {:0.2f} seconds".format(tCycles))
 # Calculate the minimum length between cycles
 minTime = np.min(np.concatenate((initialTCycle, np.array([finalTCycle]))))
+print("Data collection time estimate: {:0.2f} seconds,".format(estMeasTime),
+      " minimum time between datapoints is {:0.2f} seconds".format(minTime))
 if minTime >= estMeasTime:
     print("Data collection scheme ok, starting in 5 seconds")
     time.sleep(5)
@@ -122,7 +123,7 @@ initialTime = time.time()
 to exactly when the measurement was taken. Script tries to open previously
 collected data first, or creates a new file."""
 try:
-    data = pd.read_csv('data.csv')
+    data = pd.read_csv('data.csv',index_col=0)
 except FileNotFoundError:
     data = pd.DataFrame(columns=["Avg", "StdDev", "nMeas", "Type"])
 time.sleep(2)
@@ -164,10 +165,11 @@ while True:
         # Variables for when measurements are taken
         try:
             # Use iterator to generate the next time point
-            timeNextPoint = time.time()+next(tCycles)
+            nextTCycle = next(tCycles)
         except StopIteration:
             # If you've reached the iterator end, use the final time
-            tCycles = finalTCycle
+            nextTCycle = finalTCycle
+        timeNextPoint = time.time()+nextTCycle
         measStartTime = time.time()
         if currentMeas:
             t, tempMeas = takeMeasurement(keithley, measureNum, nMeas,
