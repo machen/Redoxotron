@@ -52,16 +52,8 @@ def takeMeasurement(device, measNum, nMeas, pauseLen, printVal=True,
     return measTime, [measAvg, measStd, measSize]
 
 
-# Initialize the multimeter, clear and reset
-rm = visa.ResourceManager('@py')
-print(rm.list_resources())
-keithley = rm.open_resource('USB0::1510::8448::8004460::0::INSTR')
-keithley.write('*cls')
-time.sleep(1)
-keithley.write('*rst')
-time.sleep(1)
-
 """ USER DEFINED INPUTS GO HERE """
+
 plotVolt = True  # Plot voltage data in real-time?
 printVals = True  # print measurements in loop
 
@@ -75,26 +67,42 @@ voltageMeas = True
 
 countdownTime = 60  # Sets interval for announcing next measurement
 
-expTimeLength = 24*60*60  # Script run time in seconds
-tCycles = 300  # Time in seconds between measurements
-numpoints = 5  # Number of measurements to average at each point
-pauseMeasure = 0.5  # Seconds between measurements. Stability requires at least 0.2 sec or greater.
+expTimeLength = 12*60*60  # Script run time in seconds
+# Specify an array with initial times as an iterable
+initialTCycle = np.concatenate([np.ones(20)*120, np.ones(20)*300])
+finalTCycle = 30*60  # Final time interval in seconds
+tCycles = iter(initialTCycle)  # Iterable with the time between samples
+nMeas = 5  # Number of measurements to average at each point
+# Seconds between measurements. Stability requires at least 0.2 sec or greater.
+pauseMeasure = 0.5
 
+""" USER NON-SERVICABLE PARTS """
+
+# Initialize the multimeter, clear and reset
+rm = visa.ResourceManager('@py')
+print(rm.list_resources())
+keithley = rm.open_resource('USB0::1510::8448::8004460::0::INSTR')
+keithley.write('*cls')
+time.sleep(1)
+keithley.write('*rst')
+time.sleep(1)
 
 """ Estimates the time measurements should take, and exits if the estimate
     is larger than the time between measurements (tCycles) """
 
 estMeasTime = ((pauseMeasure+1.25)
-               * nMeasureTypes * numpoints)+6  # Includes small fudge factor
+               * nMeasureTypes * nMeas)+6  # Includes small fudge factor
+# Calculate the minimum length between cycles
+minTime = np.min(np.concatenate((initialTCycle, np.array([finalTCycle]))))
 print("Data collection time estimate: {:0.2f} seconds,".format(estMeasTime),
-      " time between datapoints is {:0.2f} seconds".format(tCycles))
-if tCycles >= estMeasTime:
+      " minimum time between datapoints is {:0.2f} seconds".format(minTime))
+if minTime >= estMeasTime:
     print("Data collection scheme ok, starting in 5 seconds")
     time.sleep(5)
 
 else:
     print("not enough time to collect %d measurments",
-          "between %d second intervals \n" % (numpoints, tCycles))
+          "between %d second intervals \n" % (nMeas, tCycles))
     print("increase seconds between measurements",
           " or lower number of replicates per point \n")
     print("closing in 5 seconds....")
@@ -104,8 +112,10 @@ else:
     keithley.close()
     exit()
 
+if expTimeLength <= np.sum(initialTCycle):
+    print("Warning: Total experiment length is less than total time",
+          "of sample periods planned")
 
-""" USER NON-SERVICABLE PARTS """
 # Time points used for plotting. Note we use times in seconds.
 timeNextPoint = time.time()
 initialTime = time.time()
@@ -113,7 +123,7 @@ initialTime = time.time()
 to exactly when the measurement was taken. Script tries to open previously
 collected data first, or creates a new file."""
 try:
-    data = pd.read_csv('data.csv')
+    data = pd.read_csv('data.csv',index_col=0)
 except FileNotFoundError:
     data = pd.DataFrame(columns=["Avg", "StdDev", "nMeas", "Type"])
 time.sleep(2)
@@ -153,22 +163,28 @@ plt.ion()  # Turns matplotlib interactive mode on.
 while True:
     if time.time() >= timeNextPoint:
         # Variables for when measurements are taken
-        timeNextPoint = time.time()+tCycles
+        try:
+            # Use iterator to generate the next time point
+            nextTCycle = next(tCycles)
+        except StopIteration:
+            # If you've reached the iterator end, use the final time
+            nextTCycle = finalTCycle
+        timeNextPoint = time.time()+nextTCycle
         measStartTime = time.time()
         if currentMeas:
-            t, tempMeas = takeMeasurement(keithley, measureNum, numpoints,
+            t, tempMeas = takeMeasurement(keithley, measureNum, nMeas,
                                           pauseMeasure, printVal=printVals,
                                           measType="current:dc")
             data.loc[pd.to_datetime(t), :] = tempMeas.append("current:dc")
             time.sleep(2)
         if resMeas:
-            t, tempMeas = takeMeasurement(keithley, measureNum, numpoints,
+            t, tempMeas = takeMeasurement(keithley, measureNum, nMeas,
                                           pauseMeasure, printVal=printVals,
                                           measType="resistance")
             data.loc[pd.to_datetime(t), :] = tempMeas.append("resistance")
             time.sleep(2)
         if voltageMeas:
-            t, tempMeas = takeMeasurement(keithley, measureNum, numpoints,
+            t, tempMeas = takeMeasurement(keithley, measureNum, nMeas,
                                           pauseMeasure, printVal=printVals,
                                           measType="voltage:dc")
             data.loc[pd.to_datetime(t), :] = tempMeas.append("voltage:dc")
