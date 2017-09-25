@@ -29,16 +29,16 @@
 			"file": "Electrochemistry scripts/keithly_dmm.py",
 			"settings":
 			{
-				"buffer_size": 7832,
+				"buffer_size": 0,
 				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
 		},
 		{
-			"contents": "Python 3.6.1 |Continuum Analytics, Inc.| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]\nType 'copyright', 'credits' or 'license' for more information\nIPython 6.1.0 -- An enhanced Interactive Python. Type '?' for help.\n\nIn [1]: ",
+			"contents": "Python 3.6.1 |Continuum Analytics, Inc.| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]\nType 'copyright', 'credits' or 'license' for more information\nIPython 6.1.0 -- An enhanced Interactive Python. Type '?' for help.\n---------------------------------------------------------------------------\nValueError                                Traceback (most recent call last)\n~\\Documents\\ResearchCode\\Redoxotron\\Electrochemistry scripts\\keithly_dmm.py in <module>()\n     80 \n     81 # Initialize the multimeter, clear and reset\n---> 82 rm = visa.ResourceManager('@py')\n     83 print(rm.list_resources())\n     84 keithley = rm.open_resource('USB0::1510::8448::8004460::0::INSTR')\n\n~\\Miniconda3\\lib\\site-packages\\pyvisa\\highlevel.py in __new__(cls, visa_library)\n   1486     def __new__(cls, visa_library=''):\n   1487         if not isinstance(visa_library, VisaLibraryBase):\n-> 1488             visa_library = open_visa_library(visa_library)\n   1489 \n   1490         if visa_library.resource_manager is not None:\n\n~\\Miniconda3\\lib\\site-packages\\pyvisa\\highlevel.py in open_visa_library(specification)\n   1455         wrapper = 'ni'\n   1456 \n-> 1457     cls = get_wrapper_class(wrapper)\n   1458 \n   1459     try:\n\n~\\Miniconda3\\lib\\site-packages\\pyvisa\\highlevel.py in get_wrapper_class(backend_name)\n   1439             return cls\n   1440     else:\n-> 1441         raise ValueError('Wrapper not found: No package named pyvisa-%s' % backend_name)\n   1442 \n   1443 \n\nValueError: Wrapper not found: No package named pyvisa-py\n\nIn [1]: import os \n\nIn [2]: os.getcwd()\nOut[2]: 'C:\\\\Users\\\\Michael\\\\Documents\\\\ResearchCode\\\\Redoxotron\\\\Electrochemistry scripts'\n\nIn [3]: os.listdir(\"../Data\")\nOut[3]: ['Cr-Hematite_C-Ferrocyanide Redoxotron Results.xlsx', 'CrHEM_CFeCNData.csv']\n\nIn [4]: pd.read_csv(\"../Data/CrHEM_CFeCNData.csv\",index_col=0)\nOut[4]: \n                            Unnamed: 0.1       Unnamed: 0.1.1  \\\n0                                      0  2017-09-25 16:11:58   \n1                                      1  2017-09-25 16:16:58   \n2                                      2  2017-09-25 16:21:58   \n3                                      3  2017-09-25 16:26:58   \n4                                      4  2017-09-25 16:31:58   \n5                                      5  2017-09-25 16:36:58   \n6                                      6  2017-09-25 16:41:58   \n7                                      7  2017-09-25 16:46:58   \n8                                      8  2017-09-25 16:51:58   \n9                                      9  2017-09-25 16:56:58   \n10                                    10  2017-09-25 17:01:58   \n11                                    11  2017-09-25 17:06:58   \n12                                    12  2017-09-25 17:11:58   \n13                                    13  2017-09-25 17:16:58   \n14                                    14  2017-09-25 17:21:58   \n15                                    15  2017-09-25 17:26:58   \n16                                    16  2017-09-25 17:31:58   \n17                                    17  2017-09-25 17:36:58   \n18                                    18                  NaN   \n19                                    19                  NaN   \n20                                    20                  NaN   \n21                                    21                  NaN   \n22                                    22                  NaN   \n23                                    23                  NaN   \n24                                    24                  NaN   \n25                                    25                  NaN   \n26                                    26                  NaN   \n27                                    27                  NaN   \n28                                    28                  NaN   \n29                                    29                  NaN   \n30                   2017-09-25 17:55:31                  NaN   \n31                   2017-09-25 17:55:51                  NaN   \n32                   2017-09-25 17:56:11                  NaN   \n2017-09-25 17:58:17                  NaN                  NaN   \n\n                          Unnamed: 0.1.1     Unnamed: 0.1.1.1  Avg  StdDev  \\\n0                    2017-09-25 16:11:58  2017-09-25 16:11:58  NaN     NaN   \n1                    2017-09-25 16:16:58  2017-09-25 16:16:58  NaN     NaN   \n2                    2017-09-25 16:21:58  2017-09-25 16:21:58  NaN     NaN   \n3                    2017-09-25 16:26:58  2017-09-25 16:26:58  NaN     NaN   \n4                    2017-09-25 16:31:58  2017-09-25 16:31:58  NaN     NaN   \n5                    2017-09-25 16:36:58  2017-09-25 16:36:58  NaN     NaN   \n6                    2017-09-25 16:41:58  2017-09-25 16:41:58  NaN     NaN   \n7                    2017-09-25 16:46:58  2017-09-25 16:46:58  NaN     NaN   \n8                    2017-09-25 16:51:58  2017-09-25 16:51:58  NaN     NaN   \n9                    2017-09-25 16:56:58  2017-09-25 16:56:58  NaN     NaN   \n10                   2017-09-25 17:01:58  2017-09-25 17:01:58  NaN     NaN   \n11                   2017-09-25 17:06:58  2017-09-25 17:06:58  NaN     NaN   \n12                   2017-09-25 17:11:58  2017-09-25 17:11:58  NaN     NaN   \n13                   2017-09-25 17:16:58  2017-09-25 17:16:58  NaN     NaN   \n14                   2017-09-25 17:21:58  2017-09-25 17:21:58  NaN     NaN   \n15                   2017-09-25 17:26:58  2017-09-25 17:26:58  NaN     NaN   \n16                   2017-09-25 17:31:58  2017-09-25 17:31:58  NaN     NaN   \n17                   2017-09-25 17:36:58  2017-09-25 17:36:58  NaN     NaN   \n18                                   NaN                  NaN  NaN     NaN   \n19                                   NaN                  NaN  NaN     NaN   \n20                                   NaN                  NaN  NaN     NaN   \n21                                   NaN                  NaN  NaN     NaN   \n22                                   NaN                  NaN  NaN     NaN   \n23                                   NaN                  NaN  NaN     NaN   \n24                                   NaN                  NaN  NaN     NaN   \n25                                   NaN                  NaN  NaN     NaN   \n26                                   NaN                  NaN  NaN     NaN   \n27                                   NaN                  NaN  NaN     NaN   \n28                                   NaN                  NaN  NaN     NaN   \n29                                   NaN                  NaN  NaN     NaN   \n30                                   NaN                  NaN  NaN     NaN   \n31                                   NaN                  NaN  NaN     NaN   \n32                                   NaN                  NaN  NaN     NaN   \n2017-09-25 17:58:17                  NaN                  NaN  NaN     NaN   \n\n                     nMeas  Type  \n0                      NaN   NaN  \n1                      NaN   NaN  \n2                      NaN   NaN  \n3                      NaN   NaN  \n4                      NaN   NaN  \n5                      NaN   NaN  \n6                      NaN   NaN  \n7                      NaN   NaN  \n8                      NaN   NaN  \n9                      NaN   NaN  \n10                     NaN   NaN  \n11                     NaN   NaN  \n12                     NaN   NaN  \n13                     NaN   NaN  \n14                     NaN   NaN  \n15                     NaN   NaN  \n16                     NaN   NaN  \n17                     NaN   NaN  \n18                     NaN   NaN  \n19                     NaN   NaN  \n20                     NaN   NaN  \n21                     NaN   NaN  \n22                     NaN   NaN  \n23                     NaN   NaN  \n24                     NaN   NaN  \n25                     NaN   NaN  \n26                     NaN   NaN  \n27                     NaN   NaN  \n28                     NaN   NaN  \n29                     NaN   NaN  \n30                     NaN   NaN  \n31                     NaN   NaN  \n32                     NaN   NaN  \n2017-09-25 17:58:17    NaN   NaN  \n\nIn [5]: pd.read_csv(\"../Data/CrHEM_CFeCNData.csv\",index_col=0)\nOut[5]: \n                 Avg  StdDev  nMeas  Type\n9/25/2017 16:11  NaN     NaN    NaN   NaN\n9/25/2017 16:16  NaN     NaN    NaN   NaN\n9/25/2017 16:21  NaN     NaN    NaN   NaN\n9/25/2017 16:26  NaN     NaN    NaN   NaN\n9/25/2017 16:31  NaN     NaN    NaN   NaN\n9/25/2017 16:36  NaN     NaN    NaN   NaN\n9/25/2017 16:41  NaN     NaN    NaN   NaN\n9/25/2017 16:46  NaN     NaN    NaN   NaN\n9/25/2017 16:51  NaN     NaN    NaN   NaN\n9/25/2017 16:56  NaN     NaN    NaN   NaN\n9/25/2017 17:01  NaN     NaN    NaN   NaN\n9/25/2017 17:06  NaN     NaN    NaN   NaN\n9/25/2017 17:11  NaN     NaN    NaN   NaN\n9/25/2017 17:16  NaN     NaN    NaN   NaN\n9/25/2017 17:21  NaN     NaN    NaN   NaN\n9/25/2017 17:26  NaN     NaN    NaN   NaN\n9/25/2017 17:31  NaN     NaN    NaN   NaN\n9/25/2017 17:36  NaN     NaN    NaN   NaN\n\nIn [6]: pd.read_csv(\"../Data/CrHEM_CFeCNData.csv\",index_col=0)",
 			"settings":
 			{
-				"buffer_size": 241,
+				"buffer_size": 9018,
 				"line_ending": "Windows",
 				"name": "*REPL* [python]",
 				"scratch": true
@@ -68,10 +68,26 @@
 	"build_varint": "",
 	"command_palette":
 	{
-		"height": 234.0,
-		"last_filter": "ipython",
+		"height": 392.0,
+		"last_filter": "repl ip",
 		"selected_items":
 		[
+			[
+				"repl ip",
+				"SublimeREPL: Anaconda - IPython Run Current File"
+			],
+			[
+				"origami",
+				"Origami: Create Pane on the Right"
+			],
+			[
+				"repl",
+				"SublimeREPL: Anaconda - IPython"
+			],
+			[
+				"install p",
+				"Package Control: Install Package"
+			],
 			[
 				"ipython",
 				"SublimeREPL: Anaconda - IPython"
@@ -109,10 +125,6 @@
 				"Package Control: List Packages"
 			],
 			[
-				"repl ip",
-				"SublimeREPL: Python - IPython"
-			],
-			[
 				"repl p",
 				"SublimeREPL: Python - IPython"
 			],
@@ -131,10 +143,6 @@
 			[
 				"package",
 				"Package Control: List Packages"
-			],
-			[
-				"repl",
-				"Bookmarks: Select Previous"
 			],
 			[
 				"package control: install",
@@ -189,7 +197,7 @@
 				"Package Control: List Packages"
 			]
 		],
-		"width": 444.0
+		"width": 436.0
 	},
 	"console":
 	{
@@ -213,6 +221,9 @@
 	],
 	"file_history":
 	[
+		"/D/keithly_dmm_machen.py",
+		"/C/Users/Michael/Dropbox (Personal)/work/MIT Graduate Work/Research/Puddle Spread/videoControl.m",
+		"/C/Users/Michael/Documents/ResearchCode/Redoxotron/Electrochemistry scripts/keithly_dmm.py",
 		"/C/Users/Michael/Documents/ResearchCode/Redoxotron/Electrochemistry scripts/TestFile.py",
 		"/C/Users/Michael/Dropbox (Personal)/work/MIT Graduate Work/Research/RadiumSorption/Surface Complexation/PHREEQC Modeling/pyPHREEQC.py",
 		"/C/Users/Michael/Dropbox (Personal)/work/MIT Graduate Work/Research/Redoxotron/Electrochemistry Scripts/potentiostat_1.0.py",
@@ -250,6 +261,8 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"numpoints",
+			"endtime",
 			"currtimeplain",
 			"d",
 			"initialtime",
@@ -343,15 +356,15 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 7832,
+						"buffer_size": 0,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								271,
-								271
+								0,
+								0
 							]
 						],
 						"settings":
@@ -362,47 +375,10 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 1.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 0,
-					"type": "text"
-				}
-			]
-		},
-		{
-			"selected": 0,
-			"sheets":
-			[
-				{
-					"buffer": 1,
-					"file": "Electrochemistry scripts/keithly_dmm.py",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 7832,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								4135,
-								4135
-							]
-						],
-						"settings":
-						{
-							"show_definitions": false,
-							"syntax": "Packages/Python/Python.sublime-syntax",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 32.0,
-						"translation.y": 171.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 2,
 					"type": "text"
 				}
 			]
@@ -416,15 +392,15 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 241,
+						"buffer_size": 9018,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								241,
-								241
+								9018,
+								9018
 							]
 						],
 						"settings":
@@ -438,14 +414,16 @@
 							"line_numbers": false,
 							"repl": true,
 							"repl_external_id": "python",
-							"repl_id": "f081e5964bb14973b5f67a6cccc71b47",
+							"repl_id": "09cc8132b76c4a918b3a04218076b5a1",
 							"repl_restart_args":
 							{
 								"autocomplete_server": true,
 								"cmd":
 								[
 									"C:/Users/Michael/Miniconda3/Scripts/ipython",
-									"--colors=NoColor"
+									"-i",
+									"--colors=NoColor",
+									"$file_basename"
 								],
 								"cwd": "$file_path",
 								"encoding": "utf8",
@@ -466,7 +444,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 3326.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 1,
@@ -475,8 +453,40 @@
 			]
 		},
 		{
+			"selected": 0,
 			"sheets":
 			[
+				{
+					"buffer": 1,
+					"file": "Electrochemistry scripts/keithly_dmm.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 0,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"show_definitions": false,
+							"syntax": "Packages/Python/Python.sublime-syntax",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				}
 			]
 		}
 	],
@@ -499,22 +509,16 @@
 				1
 			],
 			[
+				0,
+				1,
+				2,
+				2
+			],
+			[
 				1,
 				0,
 				2,
 				1
-			],
-			[
-				0,
-				1,
-				1,
-				2
-			],
-			[
-				1,
-				1,
-				2,
-				2
 			]
 		],
 		"cols":
