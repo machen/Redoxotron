@@ -1,16 +1,13 @@
 import visa
-import os
 import time
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
 """TO DO LIST:
-1) With the readings 0.000904, 0.000904, 0.000903, 0.000905, 0.000904 gets 0.000703 as average
 2) Enable variable timing
 3) Prevent and log errors encountered by multimeter during run
 4) Catch KeyboardInterrupt in main loop and close resource on interrupt
-5) Clean up code
 """
 
 # note:  Power-cycle keithley prior to re-starting long experiment...
@@ -61,8 +58,8 @@ keithley.write('*rst')
 time.sleep(1)
 
 """ USER DEFINED INPUTS GO HERE """
-plotvolt = True  # Plot voltage data in real-time?
-loopvals = True  # print measurements in loop
+plotVolt = True  # Plot voltage data in real-time?
+printVals = True  # print measurements in loop
 
 """ Choose measurements (set to True to enable measurement).
     Note that the multimeter must be set up to take said measurements!"""
@@ -72,9 +69,9 @@ resMeas = False
 currentMeas = False
 voltageMeas = True
 
-countdown_timer = 5  # Sets interval for announcing next measurement
+countdownTime = 5  # Sets interval for announcing next measurement
 
-totaltime = 3600  # Experimental time length in seconds, more time->longer run.
+expTimeLength = 3600  # Script run time in seconds
 tCycles = 15  # Time in seconds between measurements
 numpoints = 5  # Number of measurements to average at each point
 # Seconds between measurements. Stability requries 0.05 sec or greater.
@@ -107,8 +104,8 @@ else:
 
 """ USER NON-SERVICABLE PARTS """
 
-floattime = time.time()
-initialtime = time.time()
+timeNextPoint = time.time()
+initialTime = time.time()
 """Data is stored as a dataframe, with an DateTime index corresponding
 to when the measurement was taken. Script tries to open previously
 collected data first."""
@@ -140,88 +137,77 @@ measureNum = 0  # Marker for the measurement you're on
 
 # Declare plotting variables
 
-plotInitialTime = time.time()
-xvals = ([0])
-yvals = ([0])
-stderrlist = ([0])
-xmin = ([0])
-ymin = ([0])
-ymax = ([0])
+scriptStartTime = time.asctime(time.localtime(time.time()))
+timeVals = ([])
+voltageVals = ([])
+stdErrVals = ([])
+xmin = ([])
+ymin = ([])
+ymax = ([])
 
 plt.ion()  # Turns matplotlib interactive mode on.
 
 while True:
-    # Initialize times
-    if measureNum == 0 or time.time() >= floattime:
-        floattime = time.time()+tCycles
-        currtime = time.asctime(time.localtime(time.time()))
-        currtimeplain = time.time()
-
-        if voltageMeas:
-            t, tempMeas = takeMeasurement(keithley, measureNum, numpoints,
-                                          pauseMeasure, printVal=loopvals,
-                                          measType="voltage:dc")
-            data.loc[pd.to_datetime(t), :] = tempMeas.append("voltage:dc")
-            time.sleep(2)
+    if time.time() >= timeNextPoint:
+        timeNextPoint = time.time()+tCycles
+        measStartTime = time.time()
         if currentMeas:
             t, tempMeas = takeMeasurement(keithley, measureNum, numpoints,
-                                          pauseMeasure, printVal=loopvals,
+                                          pauseMeasure, printVal=printVals,
                                           measType="current:dc")
             data.loc[pd.to_datetime(t), :] = tempMeas.append("current:dc")
             time.sleep(2)
         if resMeas:
             t, tempMeas = takeMeasurement(keithley, measureNum, numpoints,
-                                          pauseMeasure, printVal=loopvals,
+                                          pauseMeasure, printVal=printVals,
                                           measType="resistance")
             data.loc[pd.to_datetime(t), :] = tempMeas.append("resistance")
             time.sleep(2)
+        if voltageMeas:
+            t, tempMeas = takeMeasurement(keithley, measureNum, numpoints,
+                                          pauseMeasure, printVal=printVals,
+                                          measType="voltage:dc")
+            data.loc[pd.to_datetime(t), :] = tempMeas.append("voltage:dc")
+            time.sleep(2)
         measureNum += 1
-        print("\n\n\nwriting data to file...")
+        print("\nWriting data to file...")
         data.to_csv('data.csv')
-        print("done writing to file...")
-        thisround=((time.time())-currtimeplain)
-        print("all measurements required a total of %f seconds\n"%thisround)
-        newround = (floattime-(time.time()))
-        print("%d seconds until next round of measurements"%newround)
-        countdown= newround-countdown_timer
+        print("Complete!")
+        actualMeasTime = ((time.time())-measStartTime)
+        print("All measurements required a total of {:f} seconds\n".format(
+              actualMeasTime))
+        timeToNextMeas = (timeNextPoint-(time.time()))
+        print("{:d} seconds until next round of measurements".format(
+              timeToNextMeas))
+        timeRemaining = timeToNextMeas-countdownTime
 
-        ##plot voltage values as they come in
+        # Plot voltage values live. Requires voltageMeas to be true!
 
-        if plotvolt==True:
-            plottime=(time.time())-(plotInitialTime)
-            xvals.append(plottime)
-            yvals.append(voltage_average)
-            stderrlist.append(voltage_sd)
-
-
-            xmin=min(xvals); xmax = max(xvals)
-            ymin=(min(yvals)-((max(stderrlist))*2)); ymax = (max(yvals)+((max(stderrlist))*2))
-            axes = plt.gca()
-            axes.set_xlim([xmin, xmax])
-            axes.set_ylim([ymin, ymax])
-            plt.errorbar(xvals, yvals, yerr=stderrlist, fmt='o')
+        if plotVolt:
+            timeVals.append(t)
+            voltageVals.append(tempMeas[0])
+            stdErrVals.append(tempMeas[1])
+            [xmin, xmax] = [min(timeVals), max(timeVals)]
+            # Set min and max y value by min/max value -/+ 2*max error
+            [ymin, ymax] = [(min(voltageVals)-((max(stdErrVals))*2)),
+                            (max(voltageVals)+((max(stdErrVals))*2))]
+            ax1 = plt.gca()
+            ax1.set_xlim([xmin, xmax])
+            ax1.set_ylim([ymin, ymax])
+            plt.errorbar(timeVals, voltageVals,
+                         yerr=stdErrVals, fmt='o')
             plt.pause(0.05)
 
-            
-        
-    
-
-    elif time.time()>=initialtime+totaltime:
+    elif time.time() >= initialTime+expTimeLength:
         break
 
-    elif floattime-time.time()<=countdown:
-        endtime=(initialtime+totaltime)-(time.time())
-        print ("%d seconds before next measurement, and %d seconds before end of experiment"%(countdown, endtime))
-        countdown-=countdown_timer
+    elif timeNextPoint-time.time() <= timeRemaining:
+        endtime = (initialTime+expTimeLength)-(time.time())
+        print("{:d} seconds before next measurement,".format(timeRemaining),
+              " and {:d} seconds before end of experiment".format(endtime))
+        timeRemaining -= countdownTime
 
-print ("elapsed time: %f seconds"%(floattime-initialtime))
-print("normal exit. goodbye....")
+print("Elapsed time: {:f} seconds".format(timeNextPoint-initialTime))
+print("Normal exit. Goodbye....")
 keithley.write('system:local')
 keithley.close()
-
-while True:
-    plt.pause(0.05)
-        
-
-
-
