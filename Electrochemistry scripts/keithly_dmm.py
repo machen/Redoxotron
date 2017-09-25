@@ -3,6 +3,7 @@ import os
 import time
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 
 """TO DO LIST:
 1) With the readings 0.000904, 0.000904, 0.000903, 0.000905, 0.000904 gets 0.000703 as average
@@ -48,7 +49,7 @@ def takeMeasurement(device, measNum, nMeas, pauseLen, printVal=True,
                                     len(realMeas)]
     print("\n Average: {:f}, standard dev: {:f}, number of measurements: {:d}"
           .format(measAvg, measStd, measSize))
-    return measAvg, measStd, measSize
+    return measTime, [measAvg, measStd, measSize]
 
 
 rm = visa.ResourceManager('@py')
@@ -67,8 +68,8 @@ loopvals = True  # print measurements in loop
     Note that the multimeter must be set up to take said measurements!"""
 
 nMeasureTypes = 1
-resistancemeas = False
-currentmeas = False
+resMeas = False
+currentMeas = False
 voltageMeas = True
 
 countdown_timer = 5  # Sets interval for announcing next measurement
@@ -108,11 +109,13 @@ else:
 
 floattime = time.time()
 initialtime = time.time()
-resistance = [()]
-voltage = [()]
-current = [()]
-
-
+"""Data is stored as a dataframe, with an DateTime index corresponding
+to when the measurement was taken. Script tries to open previously
+collected data first."""
+try:
+    data = pd.read_csv('data.csv')
+except FileNotFoundError:
+    data = pd.DataFrame(columns=["Avg", "StdDev", "nMeas", "Type"])
 time.sleep(2)
 print("initial test measurement...")
 
@@ -135,13 +138,6 @@ time.sleep(1)
 
 measureNum = 0  # Marker for the measurement you're on
 
-voltoutput = [(), (), ()]  # WTF IS THIS
-tempvals = [(0)]  # WTF IS THIS
-v = [(), (), ()]  # WTF IS THIS
-c = [(), (), ()]  # WTF IS THIS
-r = [(), (), ()]  # WTF IS THIS
-q = []  # WTF IS THIS
-
 # Declare plotting variables
 
 plotInitialTime = time.time()
@@ -162,105 +158,26 @@ while True:
         currtimeplain = time.time()
 
         if voltageMeas:
-            print('\nvoltage measurement number: %d' % measureNum)
-            print('measurement time: %s' %
-                  time.asctime(time.localtime(time.time())))
-            print('starting voltage measurements')
-            for i in range(numpoints):
-                voltemp = keithley.query("measure:voltage:dc?")
-                voltemp2 = voltemp.replace("\n","")
-                try:
-                    voltage = float(voltemp2)
-                    tempvals.append(voltage)
-                except:
-                    print("exception: problem reading instrument, or non-float value returned. data not recorded")
-                if loopvals == True:
-                    try:
-                        print ("reading#%d: %f"%(i,voltage))
-                    except:
-                        print("exception: cannot print non-float value")
-                time.sleep(pauseMeasure)
-            voltage_average=np.mean(tempvals)
-            voltage_sd=np.std(tempvals)
-            voltage_numpoints=numpoints
-            print("\n")
-            print (time.asctime(time.localtime(time.time())))
-            print ("average of %d points is %f volts, with standard deviation of %f volts\n"%(voltage_numpoints,voltage_average,voltage_sd))
-            v = [(voltage_numpoints),(voltage_average),(voltage_sd)]
-            tempvals=[(0)]
+            t, tempMeas = takeMeasurement(keithley, measureNum, numpoints,
+                                          pauseMeasure, printVal=loopvals,
+                                          measType="voltage:dc")
+            data.loc[pd.to_datetime(t), :] = tempMeas.append("voltage:dc")
             time.sleep(2)
-        if currentmeas==True:
-            print ('\n\ncurrent measurement number: %d'%measureNum)
-            print ('measurement time: %s'%time.asctime(time.localtime(time.time())))
-            print ('starting current measurements')
-            for i in range(numpoints):
-                currentemp = keithley.query("measure:current:dc?")
-                currentemp2 =currentemp.replace("\n","")
-                
-                try:
-                    current = float(currentemp2)
-                    tempvals.append(current)
-                except:
-                    print("exception: problem reading instrument, or non-float value returned. data not recorded")
-                          
-                if loopvals ==True:
-                    try:
-                        print ("reading#%d: %f"%(i,current))
-                    except:
-                        print("exception: cannot print non-float value")
-                time.sleep(pauseMeasure)
-                
-            current_average=np.mean(tempvals)
-            current_sd=np.std(tempvals)
-            current_numpoints=numpoints
-            print("\n")
-            print (time.asctime(time.localtime(time.time())))
-            print ("average of %d points is %f amps, with standard deviation of %f amps\n"%(current_numpoints,current_average,current_sd))
-            c = [(current_numpoints),(current_average),(current_sd)]
-            tempvals=[(0)]
+        if currentMeas:
+            t, tempMeas = takeMeasurement(keithley, measureNum, numpoints,
+                                          pauseMeasure, printVal=loopvals,
+                                          measType="current:dc")
+            data.loc[pd.to_datetime(t), :] = tempMeas.append("current:dc")
             time.sleep(2)
-            
-        if resistancemeas==True:
-            
-            print ('\n\nresistance measurement number: %d'%measureNum)
-            print ('measurement time: %s'%time.asctime(time.localtime(time.time())))
-            print ('starting resistance measurements')
-            
-            for i in range(numpoints):
-
-                resistancetemp = keithley.query("measure:resistance?")
-                resistancetemp2 = resistancetemp.replace("\n","")
-                try:
-                    resistance = float(resistancetemp2)
-                    tempvals.append(resistance)
-                except:
-                    print("exception: problem reading instrument, or non-float value returned. data not recorded")
-                if loopvals ==True:
-                    try:
-                        print ("reading#%d: %f"%(i,resistance))
-                    except:
-                        print("exception: cannot print non-float value")
-                time.sleep(pauseMeasure)
-            resist_average=np.mean(tempvals)
-            resist_sd=np.std(tempvals)
-            resist_numpoints=numpoints
-            print("\n")
-            print (time.asctime(time.localtime(time.time())))
-            print ("average of %d points is %f ohms, with standard deviation of %f ohms\n\n"%(resist_numpoints,resist_average,resist_sd))
-            r = [(resist_numpoints),(resist_average),(resist_sd)]
-            tempvals=[(0)]
+        if resMeas:
+            t, tempMeas = takeMeasurement(keithley, measureNum, numpoints,
+                                          pauseMeasure, printVal=loopvals,
+                                          measType="resistance")
+            data.loc[pd.to_datetime(t), :] = tempMeas.append("resistance")
             time.sleep(2)
- 
-            
-        measureNum+=1
-        newvals=[(currtime),(floattime),(v),(c),(r)]
-        #q.append(newvals)
-        #print (q)
-        print ("\n\n\nwriting data to file...")
-        f = open('dmm.dat','a')
-        f.write('\n')
-        f.write(str(newvals))
-        f.close
+        measureNum += 1
+        print("\n\n\nwriting data to file...")
+        data.to_csv('data.csv')
         print("done writing to file...")
         thisround=((time.time())-currtimeplain)
         print("all measurements required a total of %f seconds\n"%thisround)
