@@ -76,7 +76,7 @@ nMeas = 5  # Number of measurements to average at each point
 # Seconds between measurements. Stability requires at least 0.2 sec or greater.
 pauseMeasure = 0.5
 
-""" USER NON-SERVICABLE PARTS """
+"""---------------- USER NON-SERVICABLE PARTS ----------------"""
 
 # Initialize the multimeter, clear and reset
 rm = visa.ResourceManager('@py')
@@ -123,7 +123,7 @@ initialTime = time.time()
 to exactly when the measurement was taken. Script tries to open previously
 collected data first, or creates a new file."""
 try:
-    data = pd.read_csv('data.csv',index_col=0)
+    data = pd.read_csv('data.csv', index_col=0)
 except FileNotFoundError:
     data = pd.DataFrame(columns=["Avg", "StdDev", "nMeas", "Type"])
 time.sleep(2)
@@ -175,19 +175,22 @@ while True:
             t, tempMeas = takeMeasurement(keithley, measureNum, nMeas,
                                           pauseMeasure, printVal=printVals,
                                           measType="current:dc")
-            data.loc[pd.to_datetime(t), :] = tempMeas.append("current:dc")
+            tempMeas.append("current:dc")
+            data.loc[pd.to_datetime(t), :] = tempMeas
             time.sleep(2)
         if resMeas:
             t, tempMeas = takeMeasurement(keithley, measureNum, nMeas,
                                           pauseMeasure, printVal=printVals,
                                           measType="resistance")
-            data.loc[pd.to_datetime(t), :] = tempMeas.append("resistance")
+            tempMeas.append("resistance")
+            data.loc[pd.to_datetime(t), :] = tempMeas
             time.sleep(2)
         if voltageMeas:
             t, tempMeas = takeMeasurement(keithley, measureNum, nMeas,
                                           pauseMeasure, printVal=printVals,
                                           measType="voltage:dc")
-            data.loc[pd.to_datetime(t), :] = tempMeas.append("voltage:dc")
+            tempMeas.append("voltage:dc")
+            data.loc[pd.to_datetime(t), :] = tempMeas
             time.sleep(2)
         measureNum += 1
         print("\nWriting data to file...")
