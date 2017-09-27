@@ -48,3 +48,5 @@ Temporary Items
 RedoxotronCodesAndAnalysis.sublime-workspace
 *.sublime-workspace
 RedoxotronCodesAndAnalysis.sublime-workspace
+*.csv
+*.xlsx
