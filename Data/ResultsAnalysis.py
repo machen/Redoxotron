@@ -46,16 +46,18 @@ for fileName in workingFiles:
         ax1.errorbar(data.loc[:, 'ElapsedTime(s)']/60.0/60.0,
                      data.loc[:, 'Avg']*1000, yerr=data.loc[:, 'StdDev'], ls='none',
                      marker=typeMark, label=dataType)
-        ax1.set_xlabel("Time Elapsed (hours)")
+        ax1.set_xlabel("Time Elapsed (hrs)")
         ax2.errorbar(data.loc[:, 'ElapsedTime(s)'],
                      data.loc[:, 'Avg']*1000, yerr=data.loc[:, 'StdDev'], ls='none',
                      marker=typeMark, label=dataType)
         ax2.set_xlim([-100, 1.5*60*60.0])
+        ax2.set_ylim([3.0, 6.1])
+        ax2.set_xlabel("Time elapsed (s)")
     ax1.legend()
     ax2.legend()
     data.to_csv(fileName[:-4]+" Result.csv", index_label="Date/Time")
 sns.despine(fig=f1)
 sns.despine(fig=f2)
-f1.savefig('WholeTime.svg', fmt='svg',dpi=1000)
-f2.savefig('90min.svg', fmt='svg',dpi=1000)
+f1.savefig('WholeTime.svg', fmt='svg', dpi=1000)
+f2.savefig('90min.svg', fmt='svg', dpi=1000)
 plt.show()
