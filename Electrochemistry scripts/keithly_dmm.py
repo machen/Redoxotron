@@ -9,6 +9,7 @@ TO DO LIST:
 1) Enable variable timing
 2) Prevent and log errors encountered by multimeter during run. LINE 123
 3) Catch KeyboardInterrupt in main loop and close resource on interrupt
+4) Update CSV output to capture seconds place in times
 """
 
 # note:  Power-cycle keithley prior to re-starting long experiment...
