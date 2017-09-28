@@ -24,7 +24,7 @@ for item in workingDir:
 
 if len(workingFiles) == 0:
     print("No files found. Aborting script.")
-    exit()
+    quit()
 
 # Initialize figures
 f1 = plt.figure(1)
@@ -44,15 +44,17 @@ for fileName in workingFiles:
         typeMark = next(markers)
         subData = data.loc[data.loc[:, 'Type'] == dataType, :]
         ax1.errorbar(data.loc[:, 'ElapsedTime(s)']/60.0/60.0,
-                     data.loc[:, 'Avg']*1000, yerr=data.loc[:, 'StdDev'], ls='none',
+                     data.loc[:, 'Avg'], yerr=data.loc[:, 'StdDev'], ls='none',
                      marker=typeMark, label=dataType)
         ax1.set_xlabel("Time Elapsed (hrs)")
+        ax1.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
         ax2.errorbar(data.loc[:, 'ElapsedTime(s)'],
-                     data.loc[:, 'Avg']*1000, yerr=data.loc[:, 'StdDev'], ls='none',
+                     data.loc[:, 'Avg'], yerr=data.loc[:, 'StdDev'], ls='none',
                      marker=typeMark, label=dataType)
         ax2.set_xlim([-100, 1.5*60*60.0])
-        ax2.set_ylim([3.0, 6.1])
+        ax2.set_ylim([3.0E-3, 6.1E-3])
         ax2.set_xlabel("Time elapsed (s)")
+        ax2.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
     ax1.legend()
     ax2.legend()
     data.to_csv(fileName[:-4]+" Result.csv", index_label="Date/Time")
