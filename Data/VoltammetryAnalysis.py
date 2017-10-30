@@ -29,10 +29,12 @@ for fileName in workingFiles:
     data.sort_values(by='Voltage (mV)', ascending=True, inplace=True)
     volts = data.loc[:, 'Voltage (mV)']
     amps = data.loc[:, 'Current (A)']
-    ax1.plot(amps, volts, label=fileName, marker='.', ls=None)
+    ax1.plot(volts, amps, label=fileName, marker='.', ls=None)
     ax1.set_title('Individual Scans')
-    ax1.plot([0, 0], [100, 200], ls='-', color='k')
-ax1.set_ylim([160, 200])
+    ax1.plot([100, 200], [0, 0], ls='-', color='k')
+ax1.set_xlim([160, 200])
+ax1.set_xlabel('Voltage (mV)')
+ax1.set_ylabel('Current (A)')
 plt.legend()
 sns.despine()
 plt.show()
