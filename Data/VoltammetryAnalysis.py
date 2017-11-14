@@ -1,4 +1,4 @@
-# import numpy as np
+import numpy as np
 import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -24,17 +24,60 @@ if len(workingFiles) == 0:
 
 f1 = plt.figure(1)
 ax1 = f1.add_subplot(111)
+f2 = plt.figure(2)
+ax2 = f2.add_subplot(111)
+peakData = pd.DataFrame([])
+indexVal = 0
 for fileName in workingFiles:
     data = pd.read_table(fileName, index_col=0, header=0)
-    data.sort_values(by='Voltage (mV)', ascending=True, inplace=True)
-    volts = data.loc[:, 'Voltage (mV)']
-    amps = data.loc[:, 'Current (A)']
-    ax1.plot(volts, amps, label=fileName, marker='.', ls=None)
-    ax1.set_title('Individual Scans')
-    ax1.plot([100, 200], [0, 0], ls='-', color='k')
-ax1.set_xlim([160, 200])
+    totSweep = np.max(data.loc[:, 'Scan'])
+    for scanNum in range(0, totSweep+1):
+        scanData = data.loc[data.loc[:, 'Scan'] == scanNum, :]
+        # This line only for linear sweep data
+        # scanData.sort_values(by='Voltage (mV)', ascending=True, inplace=True)
+        volts = scanData.loc[:, 'Voltage (mV)']
+        amps = scanData.loc[:, 'Current (A)']
+        dAmps = np.diff(amps)/np.diff(volts)
+        if fileName.startswith('Oxic'):
+            colorStr = 'b'
+        elif fileName.startswith('Anoxic'):
+            colorStr = 'r'
+        else:
+            colorStr = ''
+        ax1.plot(volts, amps, label='Scan{} '.format(scanNum)+fileName,
+                 marker='.', ls='none', color=colorStr)
+        # ax1.plot([100, 200], [0, 0], ls='-', color='k')
+        ax2.plot(volts[:-1], dAmps,
+                 label='Scan {} '.format(scanNum)+fileName,
+                 marker='.', ls='none', color=colorStr)
+        # ax1.plot([0, 1], [0, 0], ls='-', color='k')
+        peakData.loc[indexVal,
+                     'File Name'] = fileName+' Scan {}'.format(scanNum)
+        peakData.loc[indexVal,
+                     'Anodic Peak (mV)'] = volts[np.argmax(amps)]
+        peakData.loc[indexVal,
+                     'Cathodic Peak (mV)'] = volts[np.argmin(amps)]
+        peakData.loc[indexVal,
+                     'Anodic Peak Current (A)'] = amps[np.argmax(amps)]
+        peakData.loc[indexVal,
+                     'Cathodic Peak Current (A)'] = amps[np.argmin(amps)]
+        indexVal += 1
+
+ax1.plot(peakData.loc[:, 'Anodic Peak (mV)'],
+         peakData.loc[:, 'Anodic Peak Current (A)'], marker='o',
+         color='k', ls='none', markersize=5)
+ax1.plot(peakData.loc[:, 'Cathodic Peak (mV)'],
+         peakData.loc[:, 'Cathodic Peak Current (A)'], marker='o',
+         color='k', ls='none', markersize=5)
+ax1.set_title('Individual Scans')
+ax2.set_title('Individual Scans: Internal Resistance Corrected')
+# ax1.set_xlim([160, 200])
+# ax2.set_xlim([0.165, 0.185])
 ax1.set_xlabel('Voltage (mV)')
 ax1.set_ylabel('Current (A)')
-plt.legend()
+ax2.set_xlabel('Voltage (mV)')
+ax2.set_ylabel('Current entering the electrode (A)')
+ax1.legend()
+ax2.legend()
 sns.despine()
 plt.show()
