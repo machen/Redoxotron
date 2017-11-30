@@ -31,26 +31,28 @@ indexVal = 0
 for fileName in workingFiles:
     data = pd.read_table(fileName, index_col=0, header=0)
     totSweep = np.max(data.loc[:, 'Scan'])
-    for scanNum in range(0, totSweep+1):
+    for scanNum in range(1, totSweep+1):
         scanData = data.loc[data.loc[:, 'Scan'] == scanNum, :]
         # This line only for linear sweep data
         # scanData.sort_values(by='Voltage (mV)', ascending=True, inplace=True)
         volts = scanData.loc[:, 'Voltage (mV)']
         amps = scanData.loc[:, 'Current (A)']
         dAmps = np.diff(amps)/np.diff(volts)
-        if fileName.startswith('Oxic'):
-            colorStr = 'b'
-        elif fileName.startswith('Anoxic'):
-            colorStr = 'r'
-        else:
-            colorStr = ''
+        # if fileName.startswith('Oxic'):
+        #     colorStr = 'b'
+        # elif fileName.startswith('Anoxic'):
+        #     colorStr = 'r'
+        # else:
+        #     colorStr = 'g'
         ax1.plot(volts, amps, label='Scan{} '.format(scanNum)+fileName,
-                 marker='.', ls='none', color=colorStr)
+                 marker='.', ls='none')  # , color=colorStr)
         # ax1.plot([100, 200], [0, 0], ls='-', color='k')
         ax2.plot(volts[:-1], dAmps,
                  label='Scan {} '.format(scanNum)+fileName,
-                 marker='.', ls='none', color=colorStr)
+                 marker='.', ls='none')  # , color=colorStr)
         # ax1.plot([0, 1], [0, 0], ls='-', color='k')
+        """Section performs "peak finding," but is false if the data has skew
+        (ie, as not been normalized to a background signal)."""
         peakData.loc[indexVal,
                      'File Name'] = fileName+' Scan {}'.format(scanNum)
         peakData.loc[indexVal,
