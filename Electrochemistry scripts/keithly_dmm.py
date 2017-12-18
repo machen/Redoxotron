@@ -68,10 +68,11 @@ voltageMeas = True
 
 countdownTime = 60  # Sets interval for announcing next measurement
 
-expTimeLength = 12*60*60  # Script run time in seconds
+expTimeLength = 7*24*60*60  # Script run time in seconds
 # Specify an array with initial times as an iterable
-initialTCycle = np.concatenate([np.ones(20)*120, np.ones(20)*300])
-finalTCycle = 30*60  # Final time interval in seconds
+initialTCycle = np.concatenate([np.ones(50)*30, np.ones(50)*60,
+                                np.ones(50)*60*5])
+finalTCycle = 15*60  # Final time interval in seconds
 tCycles = iter(initialTCycle)  # Iterable with the time between samples
 nMeas = 5  # Number of measurements to average at each point
 # Seconds between measurements. Stability requires at least 0.2 sec or greater.
@@ -162,75 +163,81 @@ ymax = ([])
 plt.ion()  # Turns matplotlib interactive mode on.
 
 while True:
-    if time.time() >= timeNextPoint:
-        # Variables for when measurements are taken
-        try:
-            # Use iterator to generate the next time point
-            nextTCycle = next(tCycles)
-        except StopIteration:
-            # If you've reached the iterator end, use the final time
-            nextTCycle = finalTCycle
-        timeNextPoint = time.time()+nextTCycle
-        measStartTime = time.time()
-        if currentMeas:
-            t, tempMeas = takeMeasurement(keithley, measureNum, nMeas,
-                                          pauseMeasure, printVal=printVals,
-                                          measType="current:dc")
-            tempMeas.append("current:dc")
-            data.loc[pd.to_datetime(t), :] = tempMeas
-            time.sleep(2)
-        if resMeas:
-            t, tempMeas = takeMeasurement(keithley, measureNum, nMeas,
-                                          pauseMeasure, printVal=printVals,
-                                          measType="resistance")
-            tempMeas.append("resistance")
-            data.loc[pd.to_datetime(t), :] = tempMeas
-            time.sleep(2)
-        if voltageMeas:
-            t, tempMeas = takeMeasurement(keithley, measureNum, nMeas,
-                                          pauseMeasure, printVal=printVals,
-                                          measType="voltage:dc")
-            tempMeas.append("voltage:dc")
-            data.loc[pd.to_datetime(t), :] = tempMeas
-            time.sleep(2)
-        measureNum += 1
-        print("\nWriting data to file...")
-        data.to_csv('data.csv')
-        print("Complete!")
-        actualMeasTime = ((time.time())-measStartTime)
-        print("All measurements required a total of {:0.2f} seconds\n".format(
-              actualMeasTime))
-        timeToNextMeas = (timeNextPoint-(time.time()))
-        print("{:0.2f} seconds until next round of measurements".format(
-              timeToNextMeas))
-        # Calculate time until next measurement for announcing purposes
-        timeRemaining = timeToNextMeas-countdownTime
+    try:
+        if time.time() >= timeNextPoint:
+            # Variables for when measurements are taken
+            try:
+                # Use iterator to generate the next time point
+                nextTCycle = next(tCycles)
+            except StopIteration:
+                # If you've reached the iterator end, use the final time
+                nextTCycle = finalTCycle
+            timeNextPoint = time.time()+nextTCycle
+            measStartTime = time.time()
+            if currentMeas:
+                t, tempMeas = takeMeasurement(keithley, measureNum, nMeas,
+                                              pauseMeasure, printVal=printVals,
+                                              measType="current:dc")
+                tempMeas.append("current:dc")
+                data.loc[pd.to_datetime(t), :] = tempMeas
+                time.sleep(2)
+            if resMeas:
+                t, tempMeas = takeMeasurement(keithley, measureNum, nMeas,
+                                              pauseMeasure, printVal=printVals,
+                                              measType="resistance")
+                tempMeas.append("resistance")
+                data.loc[pd.to_datetime(t), :] = tempMeas
+                time.sleep(2)
+            if voltageMeas:
+                t, tempMeas = takeMeasurement(keithley, measureNum, nMeas,
+                                              pauseMeasure, printVal=printVals,
+                                              measType="voltage:dc")
+                tempMeas.append("voltage:dc")
+                data.loc[pd.to_datetime(t), :] = tempMeas
+                time.sleep(2)
+            measureNum += 1
+            print("\nWriting data to file...")
+            data.to_csv('data.csv')
+            print("Complete!")
+            actualMeasTime = ((time.time())-measStartTime)
+            print("All measurements required a total of {:0.2f} seconds\n".format(
+                  actualMeasTime))
+            timeToNextMeas = (timeNextPoint-(time.time()))
+            print("{:0.2f} seconds until next round of measurements".format(
+                  timeToNextMeas))
+            # Calculate time until next measurement for announcing purposes
+            timeRemaining = timeToNextMeas-countdownTime
 
-        # Plot voltage values live if possible.
+            # Plot voltage values live if possible.
 
-        if plotVolt and voltageMeas:
-            timeVals.append(pd.to_datetime(t))
-            voltageVals.append(tempMeas[0])
-            stdErrVals.append(tempMeas[1])
-            [xmin, xmax] = [min(timeVals), max(timeVals)]
-            # Set min and max y value by min/max value -/+ 2*max error
-            [ymin, ymax] = [(min(voltageVals)-((max(stdErrVals))*2)),
-                            (max(voltageVals)+((max(stdErrVals))*2))]
-            ax1 = plt.gca()
-            ax1.set_xlim([xmin, xmax])
-            ax1.set_ylim([ymin, ymax])
-            plt.errorbar(timeVals, voltageVals,
-                         yerr=stdErrVals, fmt='o')
-            plt.pause(0.05)
-    # Stop execution if you reach the max time
-    elif time.time() >= initialTime+expTimeLength:
-        break
-    # Play announcement if you've reached the appropriate time (timeRemaining)
-    elif timeNextPoint-time.time() <= timeRemaining:
-        endTime = (initialTime+expTimeLength)-(time.time())
-        print("{:0.2f} seconds before next measurement,".format(timeRemaining),
-              " and {:0.2f} seconds before end of experiment".format(endTime))
-        timeRemaining -= countdownTime
+            if plotVolt and voltageMeas:
+                timeVals.append(pd.to_datetime(t))
+                voltageVals.append(tempMeas[0])
+                stdErrVals.append(tempMeas[1])
+                [xmin, xmax] = [min(timeVals), max(timeVals)]
+                # Set min and max y value by min/max value -/+ 2*max error
+                [ymin, ymax] = [(min(voltageVals)-((max(stdErrVals))*2)),
+                                (max(voltageVals)+((max(stdErrVals))*2))]
+                ax1 = plt.gca()
+                ax1.set_xlim([xmin, xmax])
+                ax1.set_ylim([ymin, ymax])
+                plt.errorbar(timeVals, voltageVals,
+                             yerr=stdErrVals, fmt='o')
+                plt.pause(0.05)
+        # Stop execution if you reach the max time
+        elif time.time() >= initialTime+expTimeLength:
+            break
+        # Play announcement if you've reached the appropriate time (timeRemaining)
+        elif timeNextPoint-time.time() <= timeRemaining:
+            endTime = (initialTime+expTimeLength)-(time.time())
+            print("{:0.2f} seconds before next measurement,".format(timeRemaining),
+                  " and {:0.2f} seconds before end of experiment".format(endTime))
+            timeRemaining -= countdownTime
+    except KeyboardInterrupt:
+        print('User has aborted! Closing!')
+        keithley.write('system:local')
+        keithley.close()
+        exit()
 # Close everything at end of execution.
 print("Elapsed time: {:0.2f} seconds".format(timeNextPoint-initialTime))
 print("Normal exit. Goodbye....")
