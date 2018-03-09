@@ -225,15 +225,15 @@ def handler(signum, frame):
 
         gmail_pass = 'Rawegg99!'
         gmail_address = 'kocar.potentiostat@gmail.com'
-        server = smtplib.SMTP('smtp.gmail.com', 587)
-        server.starttls()
-        server.login(gmail_address, gmail_pass)
-        server.sendmail(gmail_address, recievers,
-                        'potentiostat timed out somewhere.'
-                        + ' Refresh loop initiated...')
+        # server = smtplib.SMTP('smtp.gmail.com', 587)
+        # server.starttls()
+        # server.login(gmail_address, gmail_pass)
+        # server.sendmail(gmail_address, recievers,
+        #                 'potentiostat timed out somewhere.'
+        #                 + ' Refresh loop initiated...')
 
-    textmessage = True
-    server.quit()
+    # textmessage = True
+    # server.quit()
     power_cycle()
     open_port()
     return
@@ -264,14 +264,14 @@ def data_collection(loopnumber, start_time, ser, refresh_time, looptime,
             if textmessage:
                 gmail_pass = 'Rawegg99!'
                 gmail_address = 'kocar.potentiostat@gmail.com'
-                server = smtplib.SMTP('smtp.gmail.com', 587)
-                server.starttls()
-                server.login(gmail_address, gmail_pass)
-                server.sendmail(gmail_address, recievers,
-                                'data collection successfully resumed' +
-                                'after resetting potentiostat')
-                textmessage = False
-                server.quit()
+                # server = smtplib.SMTP('smtp.gmail.com', 587)
+                # server.starttls()
+                # server.login(gmail_address, gmail_pass)
+                # server.sendmail(gmail_address, recievers,
+                #                 'data collection successfully resumed' +
+                #                 'after resetting potentiostat')
+                # textmessage = False
+                # server.quit()
         except:
             print("error sending text message")
             textmessage = False
@@ -360,13 +360,13 @@ def data_collection(loopnumber, start_time, ser, refresh_time, looptime,
         if not textmessage:
             gmail_pass = 'Rawegg99!'
             gmail_address = 'kocar.potentiostat@gmail.com'
-            server = smtplib.SMTP('smtp.gmail.com', 587)
-            server.starttls()
-            server.login(gmail_address, gmail_pass)
-            server.sendmail(gmail_address, recievers,
-                            'potentiostat failed to refresh in data loop')
-            textmessage = True
-            server.quit()
+            # server = smtplib.SMTP('smtp.gmail.com', 587)
+            # server.starttls()
+            # server.login(gmail_address, gmail_pass)
+            # server.sendmail(gmail_address, recievers,
+            #                 'potentiostat failed to refresh in data loop')
+            # textmessage = True
+            # server.quit()
         return(loopnumber, ser)
 
         textmessage = True
@@ -430,12 +430,12 @@ def main():
             if not textmessage:
                 gmail_pass = 'Rawegg99!'
                 gmail_address = 'kocar.potentiostat@gmail.com'
-                server = smtplib.SMTP('smtp.gmail.com', 587)
-                server.starttls()
-                server.login(gmail_address, gmail_pass)
-                server.sendmail(gmail_address, recievers,
-                                'potentiostat failed to refresh in mainloop')
-                server.quit()
+                # server = smtplib.SMTP('smtp.gmail.com', 587)
+                # server.starttls()
+                # server.login(gmail_address, gmail_pass)
+                # server.sendmail(gmail_address, recievers,
+                #                 'potentiostat failed to refresh in mainloop')
+                # server.quit()
             textmessage = True
             pass
 
