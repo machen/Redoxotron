@@ -22,6 +22,7 @@ import warnings
 import pykush
 from pykush import *
 import signal
+import pandas as pd
 import os
 import smtplib
 import ctypes
@@ -311,40 +312,60 @@ def data_collection(loopnumber, start_time, ser, refresh_time, looptime,
 
             if time_now >= collection_countdown:
 
-                # track time and update data matrix when experimental time exceeds specified timeloop
-                    exptime_int=int(exptime)
+                """ track time and update data matrix when
+                    experimental time exceeds specified timeloop"""
+                exptime_int = int(exptime)
 
-                    if exptime_int!=0:
+                if exptime_int != 0:
+                    fmtExpTime = datetime.datetime\
+                                 .fromtimestamp(exptime).strftime('%c')
+                    print("""\n{0} seconds reached in data collection loop.
+                           Recording averages from
+                            data point {1}""".format(fmtExpTime,
+                                                     loopnumber))
+                    if exptime < (avg_time/2):
+                        time_average_exp = time_now
+                    else:
+                        time_average_exp = (time_now-(avg_time/2))
 
-                        print("""\n{0} seconds reached in data collection loop.
-                               Recording averages from
-                                data point {1}""".format(exptime, loopnumber))
-                        if exptime < (avg_time/2):
-                            time_average_exp=time_now
-                        else:
-                            time_average_exp = (time_now-(avg_time/2))
+                    mean_current = np.mean(currsum)
+                    sd_current = np.std(currsum)
+                    tpointsa = len(currsum)
+                    fmtAvgTime = datetime.datetime\
+                                 .fromtimestamp(time_average_exp)\
+                                 .strftime('%c')
+                    print("time:", fmtAvgTime)
+                    print("current:", mean_current)
+                    print("standard_deviation:", sd_current)
+                    print("number of points:", tpointsa)
+                    zPD = pd.DataFrame([mean_current, sd_current,
+                                        tpointsa], index=fmtAvgTime)
+                    print("Writing data to file\n")
+                    try:
+                        with open(exp_name+'.csv', 'a') as f:
+                            zPD.to_csv(f, header=False)
+                    except FileNotFoundError:
+                        print('No pandas file, creating new file.\n')
+                        zPD.index.name = 'Avg Meas Time'
+                        zPD.columns = ['AvgCurrent (A)', 'StdCurrent(A)',
+                                       'NPoints']
+                        zPD.to_csv(exp_name+'.csv')
+                    except:
+                        print('Unable to write pandas file.\n')
 
-                        mean_current = np.mean(currsum)
-                        sd_current = np.std(currsum)
-                        tpointsa = len(currsum)
-                        print("time:", time_average_exp)
-                        print("current:", mean_current)
-                        print("standard_deviation:", sd_current)
-                        print("number of points:", tpointsa)
-                        z = [(time_average_exp), (mean_current),
-                             (sd_current), (tpointsa)]
-                        # Write data to file
-                        print("Writing data to file\n")
-                        f = open('test.dat', 'a')
-                        time.sleep(0.5)
-                        f.write('\n')
-                        f.write(str(z))
-                        f.close
-                        time.sleep(0.5)
-                        currsum = []
-                        collection_countdown = time_now+avg_time
-                        loopnumber += 1
-                        time.sleep(0.5)
+                    z = [(time_average_exp), (mean_current),
+                         (sd_current), (tpointsa)]
+                    # Write data to file
+                    f = open('test.dat', 'a')
+                    time.sleep(0.5)
+                    f.write('\n')
+                    f.write(str(z))
+                    f.close
+                    time.sleep(0.5)
+                    currsum = []
+                    collection_countdown = time_now+avg_time
+                    loopnumber += 1
+                    time.sleep(0.5)
             if time_now >= looptime:
                 # Potentiostat refresh when "refresh frequency" exceeded
                 print("\npotentiostat refresh, breaking data collection loop")
