@@ -11,6 +11,7 @@ isExpParam = False
 isExpData = False
 expNo = 0  # Index for the experiments
 dataIndex = 0
+timeFmt = '%Y-%m-%d %H:%M:%S'
 
 # Initialize data storage
 
@@ -35,7 +36,7 @@ with open(dataPath, 'r') as file:
             try:
                 # Need to convert Unix dates to regular dates
                 params[0] = dt.datetime.fromtimestamp(float(params[0]))\
-                                          .strftime('%Y-%m-%d %H:%M:%S')
+                                          .strftime(timeFmt)
             except ValueError:
                 pass
             date = params[0]
@@ -64,8 +65,15 @@ with open(dataPath, 'r') as file:
                 pos = 0
                 for item in data:
                     # Need to convert elapsed times to dates, and unix time stamps
+                    if pos == 0:
+                        item = float(item)
+                        if item > 1E8:
+                            item = dt.datetime.strftime(timeFmt)
+                        else:
+                            item = dt.timedelta(seconds=item)
+                            item = dt.datetime.strptime(date, timeFmt)+item
                     posLabel = dataColumns[pos]
-                    expData.loc[dataIndex, posLabel] = float(item)
+                    expData.loc[dataIndex, posLabel] = item
                     pos += 1
                 expData.loc[dataIndex, 'expNo'] = expNo
                 dataIndex += 1
