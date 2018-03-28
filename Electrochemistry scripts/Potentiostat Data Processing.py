@@ -11,7 +11,7 @@ isExpParam = False
 isExpData = False
 expNo = 0  # Index for the experiments
 dataIndex = 0
-timeFmt = '%Y-%m-%d %H:%M:%S'
+timeFmt = '%Y-%m-%d %H:%M:%S.%f'
 
 # Initialize data storage
 
@@ -70,7 +70,8 @@ with open(dataPath, 'r') as file:
                     if pos == 0:
                         item = float(item)
                         if item > 1E8:
-                            item = dt.datetime.strftime(timeFmt)
+                            item = dt.datetime.fromtimestamp(item)\
+                                     .strftime(timeFmt)
                         else:
                             item = dt.timedelta(seconds=item)
                             item = dt.datetime.strptime(date, timeFmt)+item
