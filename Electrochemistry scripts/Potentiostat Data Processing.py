@@ -31,7 +31,7 @@ with open(dataPath, 'r') as file:
     for line in file:
         # Should parse if either experiment info or data
         if isExpParam:
-            # Casts the various input strings as the correct types
+            # Parses Experimental data
             params = line.split(',')
             try:
                 # Need to convert Unix dates to regular dates
@@ -39,6 +39,7 @@ with open(dataPath, 'r') as file:
                                           .strftime(timeFmt)
             except ValueError:
                 pass
+            # Casts the various input strings as the correct types
             date = params[0]
             expName = params[1]
             voltage = float(params[2])
@@ -56,6 +57,7 @@ with open(dataPath, 'r') as file:
             expNo += 1
             isExpParam = False
         if isExpData:
+            # Parses Experimental Data
             if line in ['\n', '\r\n']:
                 isExpData = False
                 continue
@@ -78,9 +80,11 @@ with open(dataPath, 'r') as file:
                 expData.loc[dataIndex, 'expNo'] = expNo
                 dataIndex += 1
         if expParamRE.match(line):
+            # Marks detection of exp parameter strings
             isExpParam = True
             continue
         if expDataRE.match(line):
+            # Marks detection of experimental data strings
             isExpData = True
             continue
 expData.to_csv('Experimental Data.csv')
