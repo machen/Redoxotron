@@ -31,6 +31,7 @@ warnings.filterwarnings("ignore", ".*GUI is implemented.*")
 
 # Name of experiment: What does this mean?
 exp_name = 'Redoxotron_4'
+fileName = 'Redoxotron4.dat'
 
 
 # Global Variables: User edited
@@ -356,7 +357,7 @@ def data_collection(loopnumber, start_time, ser, refresh_time, looptime,
                     z = [(time_average_exp), (mean_current),
                          (sd_current), (tpointsa)]
                     # Write data to file
-                    f = open('test.dat', 'a')
+                    f = open(fileName, 'a')
                     time.sleep(0.5)
                     f.write('\n')
                     f.write(str(z))
@@ -405,7 +406,7 @@ def main():
     collection_countdown = time_now+avg_time
     loopnumber = 1
     refresh_time = time_now+refresh_freq
-    f = open('test.dat', 'a')
+    f = open(fileName, 'a')
     f.write('\n\n\ndate,exp name, mV, dac_gain value, actual dac gain, adc_gain, adc_gain_trim, ex_time, avg_time, refresh_freq\n')
     f.write('%s,%s, %d, %d, %d, %d, %d, %d, %d, %d'%(time_now,exp_name,ex_mV,ex_dac_gain,gain,adc_gain,gain_trim,ex_time,avg_time,refresh_freq))
     f.write('\n\n\nStart run.......     time-curr-sd-points     ###########################################################')
