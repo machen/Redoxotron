@@ -1,11 +1,14 @@
-#no resetting of port(s); this script attempts to send a periodic 'abort' command to potentiostat, halting data collection but leaving port open. 
+"""
+no resetting of port(s);
+this script attempts to send a periodic 'abort' command to potentiostat,
+halting data collection but leaving port open.
 
-""" TO DO LIST:
+TO DO LIST:
 
 2) Figure out issues with crashing
 3) Structure output better for ease of analysis
 4) Write to log on crash
-5) Change date formatting to human readable"""
+"""
 
 import serial
 from serial.tools import list_ports
@@ -23,8 +26,9 @@ import pandas as pd
 
 warnings.filterwarnings("ignore", ".*GUI is implemented.*")
 
-# Name of experiment: What does this mean?
+# Name of experiment: What does this mean? Think it's for the dstat
 exp_name = 'Redoxotron_4'
+# Name of file to write to
 fileName = 'Redoxotron4.dat'
 
 
