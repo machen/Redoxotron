@@ -2,7 +2,7 @@ import pandas as pd
 import datetime as dt
 import re
 
-dataPath = "R4_CurrentData.dat"
+dataPath = "R4Testing_test.dat"
 
 expParamRE = re.compile('(date,)(.)*')
 expDataRE = re.compile('(Start run...){1}(.)*')
@@ -88,5 +88,5 @@ with open(dataPath, 'r') as file:
             # Marks detection of experimental data strings
             isExpData = True
             continue
-expData.to_csv('Experimental Data.csv')
-expParams.to_csv('Experiment Parameters.csv')
+expData.to_csv(dataPath+' Experimental Data.csv')
+expParams.to_csv(dataPath+' Experiment Parameters.csv')
