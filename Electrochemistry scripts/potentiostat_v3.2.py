@@ -8,6 +8,11 @@ TO DO LIST:
 2) Figure out issues with crashing
 3) Structure output better for ease of analysis
 4) Write to log on crash
+
+MAJOR ERRORS:
+1) Pandas is not supported on our raspberry pi for some reason
+2) Currently, script is not writing parameters to the file
+3) Times are currently inaccurate? Hard to tell
 """
 
 import serial
