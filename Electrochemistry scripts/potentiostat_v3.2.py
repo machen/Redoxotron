@@ -7,15 +7,12 @@
 4) Write to log on crash
 5) Change date formatting to human readable"""
 
-import sys
 import serial
-import io
 from serial.tools import list_ports
 import time
 import numpy as np
 import struct
 from struct import *
-import numpy as np
 # import matplotlib.pyplot as plt
 from datetime import datetime
 import warnings
@@ -23,9 +20,6 @@ import pykush
 from pykush import *
 import signal
 import pandas as pd
-import os
-import smtplib
-import ctypes
 
 warnings.filterwarnings("ignore", ".*GUI is implemented.*")
 
