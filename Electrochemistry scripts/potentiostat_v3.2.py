@@ -100,6 +100,14 @@ xvals = [()]
 yvals = [()]
 stderrlist = [()]
 
+def writeCommand(ser, cmd):
+    # Command should write to DStat and autochecks for correct protocol
+    ser.reset_input_buffer()
+    cmdLen = str(len(cmd)).encode("UTF-8")
+    initCmd = b'!'+cmdLen+b'\n'
+    ser.write(initCmd)
+    reply = ser.read(ser.in_waiting)
+
 
 def open_port(ser):
 
