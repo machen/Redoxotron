@@ -28,6 +28,7 @@ import pykush
 from pykush import *
 import signal
 import pandas as pd
+import re
 
 warnings.filterwarnings("ignore", ".*GUI is implemented.*")
 
@@ -100,13 +101,26 @@ xvals = [()]
 yvals = [()]
 stderrlist = [()]
 
-def writeCommand(ser, cmd):
+def writeCommand(ser, cmd, logFile):
     # Command should write to DStat and autochecks for correct protocol
+    if not ser.is_open:
+        print("Trying to read from closed port, aborting command: "+cmd)
+        return
+    if logFile:
+        with open(logFile, 'a') as log:
+            if ser.in_waiting > 0:
+                print("Serial port has excess data, writing to log")
+                log.write(ser.read(ser.in_waiting).decode())
+
     ser.reset_input_buffer()
     cmdLen = str(len(cmd)).encode("UTF-8")
     initCmd = b'!'+cmdLen+b'\n'
     ser.write(initCmd)
-    reply = ser.read(ser.in_waiting)
+    while ser.in_waiting == 0:
+        continue
+    reply = ser.readline()
+    ackCmd = re.compile(b'@ACK \d+\n')
+    ack0Cmd = re.compile(b'@RCV 0\n')
 
 
 def open_port(ser):
