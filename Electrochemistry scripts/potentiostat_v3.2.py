@@ -103,6 +103,9 @@ stderrlist = [()]
 
 def writeCommand(ser, cmd, logFile):
     # Command should write to DStat and autochecks for correct protocol
+    # Command should also write all commands to log
+    # If you write an empty string, command will test the comms with dstat
+    # I need to understand the call/response of the protocol better, esp with different experiments
     if not ser.is_open:
         print("Trying to read from closed port, aborting command: "+cmd)
         return
@@ -111,18 +114,42 @@ def writeCommand(ser, cmd, logFile):
             if ser.in_waiting > 0:
                 print("Serial port has excess data, writing to log")
                 log.write(ser.read(ser.in_waiting).decode())
+                ser.reset_input_buffer()
 
-    ser.reset_input_buffer()
     cmdLen = str(len(cmd)).encode("UTF-8")
     initCmd = b'!'+cmdLen+b'\n'
     ser.write(initCmd)
-    while ser.in_waiting == 0:
+    while ser.out_waiting == 0: # CHECK ME
+        # Wait for serial port to get data in the... output buffer?
         continue
     reply = ser.readline()
     ackCmd = re.compile(b'@ACK \d+\n')
     ack0Cmd = re.compile(b'@RCV 0\n')
-
-
+    if len(cmd) == 0:
+        if not re.search(ack0Cmd, reply):
+            print("Error in Potentiostat Communication: 0 length check failed")
+            return  # HOW DO WE HANDLE THIS
+        return reply.decode()
+    else:
+        if not re.search(ackCmd, reply):
+            print("Unexpected Potentiostat Communication"+reply.decode())
+            return  # HOW DO WE HANDLE THIS
+        ser.write(cmd)
+    while ser.out_waiting == 0:
+        continue
+    reply = ser.readline()
+    rcvCmd = '@RCV '+len(cmd)+'\n'
+    rcvPat = re.compile(rcvCmd.encode("UTF-8"))
+    errCmd = '(@ERR )(\w*)'
+    errPat = re.compile(errCmd.encode("UTF-8"))
+    if re.match(errPat, reply):
+        print("Error with commands:"+re.match(errPat, reply).group(2))
+        return  # HOW DO WE HANDLE THIS
+    elif re.match(rcvPat, reply):
+        # SHOULD WRITE TO A LOG THE WRITTEN COMMAND
+        with open(logFile,'a') as log:
+            log.write(cmd)
+        return
 def open_port(ser):
 
     try:
