@@ -7,6 +7,10 @@ TO DO LIST:
     d) Output data to some type of file
 2) Implement clean exits for serial ports
 3) Implement logging of errors and commands
+
+ERRORS:
+1) Reset DStat doesn't work period.
+2) Port search also does not seem to work, get serial exceptions where port appears to already be in use.
 """
 
 import serial
@@ -115,14 +119,14 @@ def sendCommand(ser, cmd, tries=10):
             if ser.readline().rstrip() == ackRpl:
                 ser.write(cmd.encode('UTF-8'))  # Write command with ack msg if we get it
                 for i in range(tries):
-                    rplRpl = b'@RCV '+len(cmd).encode("UTF-8")
+                    rplRpl = b'@RCV '+str(len(cmd)).encode("UTF-8")
                     if ser.readline().rstrip() == rplRpl:
                         paramStr = b'@RQP'
                         errStr = b'@ERR'
                         reply = ser.readline()
                         if reply.rstrip().startswith(paramStr):
                             # Checks for requirement for extra parameters
-                            print("Incorrect command: "+cmd)
+                            print("Additional parameters required: "+cmd)
                             return False
                         elif reply.rstrip().startswith(errStr):
                             print(errStr.decode("UTF-8"))
@@ -133,11 +137,13 @@ def sendCommand(ser, cmd, tries=10):
                         ser.reset_input_buffer()
                         ser.write(cmd.encode('UTF-8'))
                         time.sleep(0.1)
+                return False
             else:
                 time.sleep(0.5)
                 ser.reset_input_buffer()
                 ser.write(cmdInitStr)
                 time.sleep(0.1)
+        return False
 
 
 def initializeDStat(path, timeout=3):
@@ -155,6 +161,7 @@ def initializeDStat(path, timeout=3):
                 ser = serial.Serial(newPath, rtscts=True, timeout=timeout,
                                     write_timeout=timeout)
             except serial.SerialException:
+                ser = None
                 continue
         if not ser:
             raise serial.SerialException('Could not find correct serial port')
@@ -165,249 +172,252 @@ def initializeDStat(path, timeout=3):
         raise CommunicationsError(ser.name, "DStat read/write test failed.")
 
 
-def resetDStat(ser):
-    path = ser.name
-    attempt = sendCommand(ser, 'R\n')
-    if attempt:
-        ser.close()
-        ser = initializeDStat(path)
-        return ser
-    else:
-        raise CommunicationsError(path, 'Reset has failed.')
+# Function does not currently work, issues with send Command
+
+# def resetDStat(ser):
+#     path = ser.name
+#     attempt = sendCommand(ser, 'R\n')
+#     time.sleep(10)
+#     if attempt:
+#         ser.close()
+#         ser = initializeDStat(path)
+#         return ser
+#     else:
+#         raise CommunicationsError(path, 'Reset has failed.')
 
 
-def write_params(ser):
-        signal.signal(signal.SIGALRM, handler)
-        signal.alarm(30)
-        ser.write(b'!0\n')
-        time.sleep(0.3)
-        ser.write(b'V\n')
-        time.sleep(0.3)
-#        for line in ser:
-#            print(line)
-#            if line==(b'@DONE\n'):
-#                print ("finished")
-#                break
-#            if line==(b'@RCV 0\n'):
-#                print ("communication ok")
-#                time.sleep(0.5)
-#                break
-        dac_mV = int(21846*(ex_mV/1000)+32768)
-        ser.write(b'!9\n')
-        time.sleep(1)
-        ser.write(b'EA2 03 1\n')
-        time.sleep(1)
-# If changing gain, check number of characters to send
-#        for line in ser:
-#            print (line)
-#            if line==(b'@DONE\n'):
-#                print ("finished with")
-#                break
-#        print ("EA section")
-#
-        ser.write(b'!5\n')
-        time.sleep(1)
-        ser.write(b'EG1 0\n')
-        time.sleep(1)
-#
-#        for line in ser:
-#            print (line)
-#            if line==(b'@DONE\n'):
-#                print ("finished with")
-#                break
-#        print ("EG section")
-        ser.write(b'!5\n')
-        time.sleep(1)
-        ser.write(b'ER1 0\n')
-        time.sleep(1)
-        ser.write(b'%d\n' % dac_mV)
-        time.sleep(1)
-#
-#        for line in ser:
-#            print (line)
-#            if line==(b'@DONE\n'):
-#                print ("finished with")
-#                break
-#        print ("ER section")
-        ser.write(b'%d\n' % ex_time)
-        time.sleep(1)
-        print("\nparameters successfully uploaded....")
+# def write_params(ser):
+#         signal.signal(signal.SIGALRM, handler)
+#         signal.alarm(30)
+#         ser.write(b'!0\n')
+#         time.sleep(0.3)
+#         ser.write(b'V\n')
+#         time.sleep(0.3)
+# #        for line in ser:
+# #            print(line)
+# #            if line==(b'@DONE\n'):
+# #                print ("finished")
+# #                break
+# #            if line==(b'@RCV 0\n'):
+# #                print ("communication ok")
+# #                time.sleep(0.5)
+# #                break
+#         dac_mV = int(21846*(ex_mV/1000)+32768)
+#         ser.write(b'!9\n')
+#         time.sleep(1)
+#         ser.write(b'EA2 03 1\n')
+#         time.sleep(1)
+# # If changing gain, check number of characters to send
+# #        for line in ser:
+# #            print (line)
+# #            if line==(b'@DONE\n'):
+# #                print ("finished with")
+# #                break
+# #        print ("EA section")
+# #
+#         ser.write(b'!5\n')
+#         time.sleep(1)
+#         ser.write(b'EG1 0\n')
+#         time.sleep(1)
+# #
+# #        for line in ser:
+# #            print (line)
+# #            if line==(b'@DONE\n'):
+# #                print ("finished with")
+# #                break
+# #        print ("EG section")
+#         ser.write(b'!5\n')
+#         time.sleep(1)
+#         ser.write(b'ER1 0\n')
+#         time.sleep(1)
+#         ser.write(b'%d\n' % dac_mV)
+#         time.sleep(1)
+# #
+# #        for line in ser:
+# #            print (line)
+# #            if line==(b'@DONE\n'):
+# #                print ("finished with")
+# #                break
+# #        print ("ER section")
+#         ser.write(b'%d\n' % ex_time)
+#         time.sleep(1)
+#         print("\nparameters successfully uploaded....")
 
-        if ser.is_open:
-            print("port still open after writing params," +
-                  " continuing to data collection loop...\n")
-        else:
-            print('problem with serial port, attempting to reset port')
-            signal.alarm(0)
-            open_port()
+#         if ser.is_open:
+#             print("port still open after writing params," +
+#                   " continuing to data collection loop...\n")
+#         else:
+#             print('problem with serial port, attempting to reset port')
+#             signal.alarm(0)
+#             open_port()
 
-        signal.alarm(0)
-        return ser
+#         signal.alarm(0)
+#         return ser
 
-def data_collection(loopnumber, start_time, ser, refresh_time, looptime,
-                    exptime, collection_countdown):
+# def data_collection(loopnumber, start_time, ser, refresh_time, looptime,
+#                     exptime, collection_countdown):
 
-    timeold = 0  # What is this?
-    currsum = []
-    global textmessage
-    g = avg_time+30
-    signal.signal(signal.SIGALRM, handler)
-    signal.alarm(g)
+#     timeold = 0  # What is this?
+#     currsum = []
+#     global textmessage
+#     g = avg_time+30
+#     signal.signal(signal.SIGALRM, handler)
+#     signal.alarm(g)
 
-    try:
-        ser.flushOutput()
-        ser.flushInput()
+#     try:
+#         ser.flushOutput()
+#         ser.flushInput()
 
-        for line in ser:
-            signal.alarm(g)
-            time_now = time.time()
-            data = ser.read(ser.inWaiting())
-            # print(data)
-            if data.startswith(b'@') or data.startswith(b'#') or \
-               data.startswith(b'\n'):
-                # note: dstat returns data in binary as hexadecimal,
-                # form \xhh (where hh = 2-value hex)
-                pass
+#         for line in ser:
+#             signal.alarm(g)
+#             time_now = time.time()
+#             data = ser.read(ser.inWaiting())
+#             # print(data)
+#             if data.startswith(b'@') or data.startswith(b'#') or \
+#                data.startswith(b'\n'):
+#                 # note: dstat returns data in binary as hexadecimal,
+#                 # form \xhh (where hh = 2-value hex)
+#                 pass
 
-            else:
-                try:
-                    x = data.replace(b'\n', b'')
-                    new = struct.unpack('<HHl', x)
-                    sec, millisec, curr = new
-                    float(sec)
-                    float(millisec)
-                    float(curr)
-                    exptime = (sec+(millisec/1000.))
-                    current = (curr)*(adc_gain/2)*(1.5/gain/8388607)
-                    currsum.append(current)
-                    print(current)
+#             else:
+#                 try:
+#                     x = data.replace(b'\n', b'')
+#                     new = struct.unpack('<HHl', x)
+#                     sec, millisec, curr = new
+#                     float(sec)
+#                     float(millisec)
+#                     float(curr)
+#                     exptime = (sec+(millisec/1000.))
+#                     current = (curr)*(adc_gain/2)*(1.5/gain/8388607)
+#                     currsum.append(current)
+#                     print(current)
 
-                except:
+#                 except:
 
-                    print("ignoring nondata line")
-                    pass
+#                     print("ignoring nondata line")
+#                     pass
 
-            if time_now >= collection_countdown:
+#             if time_now >= collection_countdown:
 
-                """ track time and update data matrix when
-                    experimental time exceeds specified timeloop"""
-                exptime_int = int(exptime)
+#                 """ track time and update data matrix when
+#                     experimental time exceeds specified timeloop"""
+#                 exptime_int = int(exptime)
 
-                if exptime_int != 0:
-                    fmtExpTime = datetime.datetime\
-                                 .fromtimestamp(exptime).strftime('%c')
-                    print("""\n{0} seconds reached in data collection loop.
-                           Recording averages from
-                            data point {1}""".format(fmtExpTime,
-                                                     loopnumber))
-                    if exptime < (avg_time/2):
-                        time_average_exp = time_now
-                    else:
-                        time_average_exp = (time_now-(avg_time/2))
+#                 if exptime_int != 0:
+#                     fmtExpTime = datetime.datetime\
+#                                  .fromtimestamp(exptime).strftime('%c')
+#                     print("""\n{0} seconds reached in data collection loop.
+#                            Recording averages from
+#                             data point {1}""".format(fmtExpTime,
+#                                                      loopnumber))
+#                     if exptime < (avg_time/2):
+#                         time_average_exp = time_now
+#                     else:
+#                         time_average_exp = (time_now-(avg_time/2))
 
-                    mean_current = np.mean(currsum)
-                    sd_current = np.std(currsum)
-                    tpointsa = len(currsum)
-                    fmtAvgTime = datetime.datetime\
-                                 .fromtimestamp(time_average_exp)\
-                                 .strftime('%c')
-                    print("time:", fmtAvgTime)
-                    print("current:", mean_current)
-                    print("standard_deviation:", sd_current)
-                    print("number of points:", tpointsa)
-                    zPD = pd.DataFrame([mean_current, sd_current,
-                                        tpointsa], index=fmtAvgTime)
-                    print("Writing data to file\n")
-                    try:
-                        with open(exp_name+'.csv', 'a') as f:
-                            zPD.to_csv(f, header=False)
-                    except FileNotFoundError:
-                        print('No pandas file, creating new file.\n')
-                        zPD.index.name = 'Avg Meas Time'
-                        zPD.columns = ['AvgCurrent (A)', 'StdCurrent(A)',
-                                       'NPoints']
-                        zPD.to_csv(exp_name+'.csv')
-                    except:
-                        print('Unable to write pandas file.\n')
+#                     mean_current = np.mean(currsum)
+#                     sd_current = np.std(currsum)
+#                     tpointsa = len(currsum)
+#                     fmtAvgTime = datetime.datetime\
+#                                  .fromtimestamp(time_average_exp)\
+#                                  .strftime('%c')
+#                     print("time:", fmtAvgTime)
+#                     print("current:", mean_current)
+#                     print("standard_deviation:", sd_current)
+#                     print("number of points:", tpointsa)
+#                     zPD = pd.DataFrame([mean_current, sd_current,
+#                                         tpointsa], index=fmtAvgTime)
+#                     print("Writing data to file\n")
+#                     try:
+#                         with open(exp_name+'.csv', 'a') as f:
+#                             zPD.to_csv(f, header=False)
+#                     except FileNotFoundError:
+#                         print('No pandas file, creating new file.\n')
+#                         zPD.index.name = 'Avg Meas Time'
+#                         zPD.columns = ['AvgCurrent (A)', 'StdCurrent(A)',
+#                                        'NPoints']
+#                         zPD.to_csv(exp_name+'.csv')
+#                     except:
+#                         print('Unable to write pandas file.\n')
 
-                    z = [(time_average_exp), (mean_current),
-                         (sd_current), (tpointsa)]
-                    # Write data to file
-                    f = open(fileName, 'a')
-                    time.sleep(0.5)
-                    f.write('\n')
-                    f.write(str(z))
-                    f.close
-                    time.sleep(0.5)
-                    currsum = []
-                    collection_countdown = time_now+avg_time
-                    loopnumber += 1
-                    time.sleep(0.5)
-            if time_now >= looptime:
-                # Potentiostat refresh when "refresh frequency" exceeded
-                print("\npotentiostat refresh, breaking data collection loop")
-                ser.close()
-                signal.alarm(0)
-                return(loopnumber, ser)
-            signal.alarm(0)
-    except:
-        print("\nproblem with data collection loop. Will attempt to reset potentiostat\n")
-        if ser.is_open:
-            ser.close()
-        return(loopnumber, ser)
+#                     z = [(time_average_exp), (mean_current),
+#                          (sd_current), (tpointsa)]
+#                     # Write data to file
+#                     f = open(fileName, 'a')
+#                     time.sleep(0.5)
+#                     f.write('\n')
+#                     f.write(str(z))
+#                     f.close
+#                     time.sleep(0.5)
+#                     currsum = []
+#                     collection_countdown = time_now+avg_time
+#                     loopnumber += 1
+#                     time.sleep(0.5)
+#             if time_now >= looptime:
+#                 # Potentiostat refresh when "refresh frequency" exceeded
+#                 print("\npotentiostat refresh, breaking data collection loop")
+#                 ser.close()
+#                 signal.alarm(0)
+#                 return(loopnumber, ser)
+#             signal.alarm(0)
+#     except:
+#         print("\nproblem with data collection loop. Will attempt to reset potentiostat\n")
+#         if ser.is_open:
+#             ser.close()
+#         return(loopnumber, ser)
 
-def main():
-    pot_refresh_time = 0.
-    exptime = 0
-    refresh_time = avg_time
-    ser = serial.Serial(port=None)
-    time_average = 0
-    time_average_exp = 0
-    start_time = time.time()
-    time_now = time.time()
-    collection_countdown = time_now+avg_time
-    loopnumber = 1
-    refresh_time = time_now+refresh_freq
-    f = open(fileName, 'a')
-    f.write('\n\n\ndate,exp name, mV, dac_gain value, actual dac gain, adc_gain, adc_gain_trim, ex_time, avg_time, refresh_freq\n')
-    f.write('%s,%s, %d, %d, %d, %d, %d, %d, %d, %d'%(time_now,exp_name,ex_mV,ex_dac_gain,gain,adc_gain,gain_trim,ex_time,avg_time,refresh_freq))
-    f.write('\n\n\nStart run.......     time-curr-sd-points     ###########################################################')
-    f.close()
+# def main():
+#     pot_refresh_time = 0.
+#     exptime = 0
+#     refresh_time = avg_time
+#     ser = serial.Serial(port=None)
+#     time_average = 0
+#     time_average_exp = 0
+#     start_time = time.time()
+#     time_now = time.time()
+#     collection_countdown = time_now+avg_time
+#     loopnumber = 1
+#     refresh_time = time_now+refresh_freq
+#     f = open(fileName, 'a')
+#     f.write('\n\n\ndate,exp name, mV, dac_gain value, actual dac gain, adc_gain, adc_gain_trim, ex_time, avg_time, refresh_freq\n')
+#     f.write('%s,%s, %d, %d, %d, %d, %d, %d, %d, %d'%(time_now,exp_name,ex_mV,ex_dac_gain,gain,adc_gain,gain_trim,ex_time,avg_time,refresh_freq))
+#     f.write('\n\n\nStart run.......     time-curr-sd-points     ###########################################################')
+#     f.close()
 
-    init_flag = 0  # What does this do?
-    while True:
-        try:
-            if ser.is_open:
-                ser.close()
-            if not ser.is_open:
-                ser = open_port(ser)
-                time.sleep(0.1)
-            time_now = time.time()
-            looptime = time_now+refresh_freq
-            loopnumber, ser = data_collection(loopnumber, start_time,
-                                              ser, refresh_time, looptime,
-                                              exptime, collection_countdown)
-            if use_port_refresh:
-                print("refreshing potentiostat through power cycling")
-        except:
-            print("problem in main program loop." +
-                  " attempting to clear variables and reset")
-            pot_refresh_time = 0.
-            exptime = 0
-            refresh_time = avg_time
-            time_average = 0
-            time_average_exp = 0
-            start_time = time.time()
-            time_now = time.time()
-            collection_countdown = time_now+avg_time
-            loopnumber = 1
-            refresh_time = time_now+refresh_freq
-            ser = serial.Serial(port=None)
-            time.sleep(1)
-            print("reset complete...restarting entire loop, power cycle")
-            time.sleep(1)
-            pass
+#     init_flag = 0  # What does this do?
+#     while True:
+#         try:
+#             if ser.is_open:
+#                 ser.close()
+#             if not ser.is_open:
+#                 ser = open_port(ser)
+#                 time.sleep(0.1)
+#             time_now = time.time()
+#             looptime = time_now+refresh_freq
+#             loopnumber, ser = data_collection(loopnumber, start_time,
+#                                               ser, refresh_time, looptime,
+#                                               exptime, collection_countdown)
+#             if use_port_refresh:
+#                 print("refreshing potentiostat through power cycling")
+#         except:
+#             print("problem in main program loop." +
+#                   " attempting to clear variables and reset")
+#             pot_refresh_time = 0.
+#             exptime = 0
+#             refresh_time = avg_time
+#             time_average = 0
+#             time_average_exp = 0
+#             start_time = time.time()
+#             time_now = time.time()
+#             collection_countdown = time_now+avg_time
+#             loopnumber = 1
+#             refresh_time = time_now+refresh_freq
+#             ser = serial.Serial(port=None)
+#             time.sleep(1)
+#             print("reset complete...restarting entire loop, power cycle")
+#             time.sleep(1)
+#             pass
 
 
-if __name__ == "__main__":
-                main()
+# if __name__ == "__main__":
+#                 main()
