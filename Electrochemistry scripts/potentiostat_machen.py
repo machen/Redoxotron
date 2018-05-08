@@ -96,9 +96,8 @@ class CommunicationsError(Error):
 
 
 def sendCommand(ser, cmd, tries=10):
-    # Right now, all commands need to be sent as complete (ie with newline)
-    # Script attempts to write commands a few times (ie tries)
-    # Should eventually write to a log file if in error
+    # sendCommand only sends the command and checks that it's been received properly
+    # Checking of the responses (ie for issues with parameters) need to be handled outside of the function
     cmd = cmd.rstrip()
     ser.reset_input_buffer()
     cmdInitStr = b'!'+str(len(cmd)).encode("UTF-8")+b'\n'
@@ -123,16 +122,6 @@ def sendCommand(ser, cmd, tries=10):
                 for j in range(tries):
                     rplRpl = b'@RCV '+str(len(cmd)).encode("UTF-8")
                     if ser.readline().rstrip() == rplRpl:
-                        paramStr = b'@RQP'
-                        errStr = b'@ERR'
-                        reply = ser.readline()
-                        if reply.rstrip().startswith(paramStr):
-                            # Checks for requirement for extra parameters
-                            print("Additional parameters required: "+cmd)
-                            return False
-                        elif reply.rstrip().startswith(errStr):
-                            print(errStr.decode("UTF-8"))
-                            return False
                         return True
                     else:
                         time.sleep(0.5)
