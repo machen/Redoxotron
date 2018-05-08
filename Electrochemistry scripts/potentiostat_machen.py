@@ -24,8 +24,6 @@ from struct import *
 # import matplotlib.pyplot as plt
 from datetime import datetime
 import warnings
-import pykush
-from pykush import *
 import signal
 import pandas as pd
 
@@ -94,28 +92,39 @@ xvals = [()]
 yvals = [()]
 stderrlist = [()]
 
+class Error(Exception):
+    """ Base class for exceptions. """
+    pass
+
+class CommunicationsError(Error):
+    """Error class for failed communications to dstat"""
+    def __init__(self, expression, message):
+        self.expression = expression
+        self.message = message
+
 def sendCommand(ser, cmd, tries=10):
-    # Right now, all commands need to be sent as complete
+    # Right now, all commands need to be sent as complete (ie with newline)
     # Script attempts to write commands a few times (ie tries)
     # Should eventually write to a log file if in error
     ser.reset_input_buffer()
-    cmdInitStr = b'!'+len(cmd)+b'\n'
+    cmdInitStr = b'!'+str(len(cmd)).encode("UTF-8")+b'\n'
     ser.write(cmdInitStr)  # Write initiator command
     if len(cmd) == 0:  # 0 len cmd gives only a test. This tests for response
         for i in range(tries):
             if ser.readline().rstrip() == b"@ACK 0":
                 if ser.readline().rstrip() == b"@RCV 0":
-                    return  # WHAT TO DO AFTER CORRECT EXECUTION
+                    return True
             else:
                 time.sleep(0.5)
                 ser.reset_input_buffer()
                 ser.write(cmdInitStr)
                 time.sleep(0.1)
+        return False
     else:
         for i in range(tries):
             ackRpl = b'@ACK '+str(len(cmd)).encode("UTF-8")
             if ser.readline().rstrip() == ackRpl:
-                ser.write(cmd)  # Write command with ack msg if we get it
+                ser.write(cmd.encode('UTF-8'))  # Write command with ack msg if we get it
                 for i in range(tries):
                     rplRpl = b'@RCV '+len(cmd).encode("UTF-8")
                     if ser.readline().rstrip() == rplRpl:
@@ -125,15 +134,15 @@ def sendCommand(ser, cmd, tries=10):
                         if reply.rstrip().startswith(paramStr):
                             # Checks for requirement for extra parameters
                             print("Incorrect command: "+cmd)
-                            return  # WHAT DO WE DO AFTER INCORRECT EXECUTION
+                            return False
                         elif reply.rstrip().startswith(errStr):
                             print(errStr.decode("UTF-8"))
-                            return  # WHAT DO WE DO AFTER INCORRECT EXECUTION
-                        return  # WHAT TO DO WITH CORRECT EXECUTION
+                            return False
+                        return True
                     else:
                         time.sleep(0.5)
                         ser.reset_input_buffer()
-                        ser.write(cmd)
+                        ser.write(cmd.encode('UTF-8'))
                         time.sleep(0.1)
             else:
                 time.sleep(0.5)
@@ -141,36 +150,29 @@ def sendCommand(ser, cmd, tries=10):
                 ser.write(cmdInitStr)
                 time.sleep(0.1)
 
-def open_port(ser):
 
+def initializeDStat(path, timeout=3):
     try:
-
-        signal.signal(signal.SIGALRM, handler)
-        signal.alarm(10)
-        if ser.is_open:
-            ser.close()
-
-        if not ser.is_open:
-
-                # Open serial port. may need to change port value
-                ser = serial.Serial('/dev/ttyACM0', rtscts=True, timeout=3)
-                signal.alarm(0)
-                print("ACM0 succesfully opened. writing experimental parameters")
-                write_params(ser)
-                return ser
-
-        else:
-            print("port already open...")
-
-    except:
-        print("could not open port on ACM0, closing port and re-trying after port enumeration")
-
-        if ser.is_open:
-            ser.close()
-        signal.alarm(0)
-        power_cycle()
-        time.sleep(2)
-        open_port(ser)
+        ser = serial.Serial(path, rtscts=True, timeout=timeout,
+                            write_timeout=timeout)
+    except serial.SerialException:
+        basePortNum = path[-1]
+        basePath = path[:-1]  # Naively tries to iterate through numbered ports
+        for portNum in range(0, 9):
+            if portNum == int(basePortNum):
+                continue
+            newPath = basePath+str(portNum)
+            try:
+                ser = serial.Serial(newPath, rtscts=True, timeout=timeout,
+                                    write_timeout=timeout)
+            except serial.SerialException:
+                continue
+        if not ser:
+            raise serial.SerialException('Could not find correct serial port')
+    if sendCommand(ser, ''):  # test empty command
+        return ser
+    else:
+        raise CommunicationsError(ser.name, "DStat read/write test failed.")
 
 
 def write_params(ser):
@@ -240,45 +242,6 @@ def write_params(ser):
 
         signal.alarm(0)
         return ser
-
-
-def power_cycle():
-
-        signal.signal(signal.SIGALRM, handler_exit)
-        signal.alarm(20)
-        # power cycle potentiostat
-        print("power cycling potentiostat")
-        yk = pykush.YKUSH()
-        # print (yk)
-        yk.set_allports_state_down()
-        # print(yk);
-        time.sleep(5)
-        yk.set_allports_state_up()
-        time.sleep(5)
-        print("power cycling complete\n")
-        signal.alarm(0)
-
-
-def handler(signum, frame):
-    global textmessage
-    print('Signal handler called with signal', signum)
-    print('Unknown problem opening port or writing parameters to potentiostat.'
-          + ' trying power-cycle to fix problem...')
-    time.sleep(1)
-    power_cycle()
-    open_port()
-    return
-
-
-def handler_exit(signum, frame):
-    print('Signal handler called with signal', signum)
-    print('strange problem communicating with YKUSH USB power cycler.'
-          + ' Escaping to main loop and attempting reset....')
-    time.sleep(1)
-    power_cycle()
-    open_port()
-    return
-
 
 def data_collection(loopnumber, start_time, ser, refresh_time, looptime,
                     exptime, collection_countdown):
@@ -416,7 +379,6 @@ def main():
             if ser.is_open:
                 ser.close()
             if not ser.is_open:
-                power_cycle()
                 ser = open_port(ser)
                 time.sleep(0.1)
             time_now = time.time()
@@ -429,7 +391,6 @@ def main():
         except:
             print("problem in main program loop." +
                   " attempting to clear variables and reset")
-            power_cycle()
             pot_refresh_time = 0.
             exptime = 0
             refresh_time = avg_time
