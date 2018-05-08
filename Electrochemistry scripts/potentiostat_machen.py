@@ -99,6 +99,7 @@ def sendCommand(ser, cmd, tries=10):
     # Right now, all commands need to be sent as complete (ie with newline)
     # Script attempts to write commands a few times (ie tries)
     # Should eventually write to a log file if in error
+    cmd = cmd.rstrip()
     ser.reset_input_buffer()
     cmdInitStr = b'!'+str(len(cmd)).encode("UTF-8")+b'\n'
     ser.write(cmdInitStr)  # Write initiator command
@@ -117,8 +118,9 @@ def sendCommand(ser, cmd, tries=10):
         for i in range(tries):
             ackRpl = b'@ACK '+str(len(cmd)).encode("UTF-8")
             if ser.readline().rstrip() == ackRpl:
-                ser.write(cmd.encode('UTF-8'))  # Write command with ack msg if we get it
-                for i in range(tries):
+                cmdStr = cmd+'\n'
+                ser.write(cmdStr.encode('UTF-8'))  # Write command with ack msg if we get it
+                for j in range(tries):
                     rplRpl = b'@RCV '+str(len(cmd)).encode("UTF-8")
                     if ser.readline().rstrip() == rplRpl:
                         paramStr = b'@RQP'
@@ -135,14 +137,16 @@ def sendCommand(ser, cmd, tries=10):
                     else:
                         time.sleep(0.5)
                         ser.reset_input_buffer()
-                        ser.write(cmd.encode('UTF-8'))
+                        ser.write(cmdStr.encode('UTF-8'))
                         time.sleep(0.1)
+                print('Failed to send and receive command'+cmd)
                 return False
             else:
                 time.sleep(0.5)
                 ser.reset_input_buffer()
                 ser.write(cmdInitStr)
                 time.sleep(0.1)
+        print('Failed to send and recieve acknowledgement')
         return False
 
 
