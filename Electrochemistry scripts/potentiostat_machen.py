@@ -169,10 +169,22 @@ def initializeDStat(path, timeout=3):
                 continue
         if not ser:
             raise serial.SerialException('Could not find correct serial port')
+        path = newPath
     if sendCommand(ser, ''):  # test empty command
         return ser
     else:
         raise CommunicationsError(ser.name, "DStat read/write test failed.")
+
+
+def resetDStat(ser):
+    path = ser.name
+    attempt = sendCommand(ser, 'R\n')
+    if attempt:
+        ser.close()
+        ser = initializeDStat(path)
+        return ser
+    else:
+        raise CommunicationsError(path, 'Reset has failed.')
 
 
 def write_params(ser):
