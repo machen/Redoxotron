@@ -94,6 +94,53 @@ xvals = [()]
 yvals = [()]
 stderrlist = [()]
 
+def sendCommand(ser, cmd, tries=10):
+    # Right now, all commands need to be sent as complete
+    # Script attempts to write commands a few times (ie tries)
+    # Should eventually write to a log file if in error
+    ser.reset_input_buffer()
+    cmdInitStr = b'!'+len(cmd)+b'\n'
+    ser.write(cmdInitStr)  # Write initiator command
+    if len(cmd) == 0:  # 0 len cmd gives only a test. This tests for response
+        for i in range(tries):
+            if ser.readline().rstrip() == b"@ACK 0":
+                if ser.readline().rstrip() == b"@RCV 0":
+                    return  # WHAT TO DO AFTER CORRECT EXECUTION
+            else:
+                time.sleep(0.5)
+                ser.reset_input_buffer()
+                ser.write(cmdInitStr)
+                time.sleep(0.1)
+    else:
+        for i in range(tries):
+            ackRpl = b'@ACK '+str(len(cmd)).encode("UTF-8")
+            if ser.readline().rstrip() == ackRpl:
+                ser.write(cmd)  # Write command with ack msg if we get it
+                for i in range(tries):
+                    rplRpl = b'@RCV '+len(cmd).encode("UTF-8")
+                    if ser.readline().rstrip() == rplRpl:
+                        paramStr = b'@RQP'
+                        errStr = b'@ERR'
+                        reply = ser.readline()
+                        if reply.rstrip().startswith(paramStr):
+                            # Checks for requirement for extra parameters
+                            print("Incorrect command: "+cmd)
+                            return  # WHAT DO WE DO AFTER INCORRECT EXECUTION
+                        elif reply.rstrip().startswith(errStr):
+                            print(errStr.decode("UTF-8"))
+                            return  # WHAT DO WE DO AFTER INCORRECT EXECUTION
+                        return  # WHAT TO DO WITH CORRECT EXECUTION
+                    else:
+                        time.sleep(0.5)
+                        ser.reset_input_buffer()
+                        ser.write(cmd)
+                        time.sleep(0.1)
+            else:
+                time.sleep(0.5)
+                ser.reset_input_buffer()
+                ser.write(cmdInitStr)
+                time.sleep(0.1)
+
 def open_port(ser):
 
     try:
