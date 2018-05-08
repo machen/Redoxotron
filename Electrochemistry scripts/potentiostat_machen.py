@@ -1,27 +1,17 @@
 """
-no resetting of port(s);
-this script attempts to send a periodic 'abort' command to potentiostat,
-halting data collection but leaving port open.
-
 TO DO LIST:
-
-2) Figure out issues with crashing
-3) Structure output better for ease of analysis
-4) Write to log on crash
-
-MAJOR ERRORS:
-1) Pandas is not supported on our raspberry pi for some reason
-2) Currently, script is not writing parameters to the file
-3) Times are currently inaccurate? Hard to tell
+1) Rewrite major functionality
+    a) Write parameters to dstat and file
+    b) Start experiment
+    c) Read in data
+    d) Output data to some type of file
+2) Implement clean exits for serial ports
+3) Implement logging of errors and commands
 """
 
 import serial
-from serial.tools import list_ports
 import time
 import numpy as np
-import struct
-from struct import *
-# import matplotlib.pyplot as plt
 from datetime import datetime
 import warnings
 import signal
@@ -101,6 +91,7 @@ class CommunicationsError(Error):
     def __init__(self, expression, message):
         self.expression = expression
         self.message = message
+
 
 def sendCommand(ser, cmd, tries=10):
     # Right now, all commands need to be sent as complete (ie with newline)
