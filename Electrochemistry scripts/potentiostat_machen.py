@@ -13,11 +13,9 @@ import serial
 import time
 import numpy as np
 from datetime import datetime
-import warnings
 import signal
 import pandas as pd
 
-warnings.filterwarnings("ignore", ".*GUI is implemented.*")
 
 # Name of experiment: What does this mean? Think it's for the dstat
 exp_name = 'Redoxotron_4'
