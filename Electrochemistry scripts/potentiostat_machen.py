@@ -84,15 +84,30 @@ xvals = [()]
 yvals = [()]
 stderrlist = [()]
 
+
 class Error(Exception):
     """ Base class for exceptions. """
     pass
+
 
 class CommunicationsError(Error):
     """Error class for failed communications to dstat"""
     def __init__(self, expression, message):
         self.expression = expression
         self.message = message
+
+
+def writeCmdLog(logFile, type, cmd):
+    if not logFile:
+        return
+    with open(logFile, 'a') as log:
+        if type is 'User':
+            log.write('U: '+cmd)
+        elif type is 'DStat':
+            log.write('D: '+cmd)
+        else:
+            log.write('?: '+cmd)
+        return
 
 
 def sendCommand(ser, cmd, tries=10, logFile=None):
@@ -102,59 +117,43 @@ def sendCommand(ser, cmd, tries=10, logFile=None):
     ser.reset_input_buffer()
     cmdInitStr = b'!'+str(len(cmd)).encode("UTF-8")+b'\n'
     ser.write(cmdInitStr)  # Write initiator command
-    if logFile:
-        with open(logFile, 'a') as log:
-            log.write('U: '+cmdInitStr)
+    writeCmdLog(logFile, 'User', cmdInitStr)
     if len(cmd) == 0:  # 0 len cmd gives only a test. This tests for response
         for i in range(tries):
             reply = ser.readline()
-            if logFile:
-                with open(logFile, 'a') as log:
-                    log.write('D: '+reply)
+            writeCmdLog(logFile, 'DStat', reply.decode())
             if reply.rstrip() == b"@ACK 0":
                 reply = ser.readline()
-                if logFile:
-                    with open(logFile, 'a') as log:
-                        log.write('D: '+reply)
+                writeCmdLog(logFile, 'DStat', reply.decode())
                 if reply.rstrip() == b"@RCV 0":
                     return True
             else:
                 time.sleep(0.5)
                 ser.reset_input_buffer()
                 ser.write(cmdInitStr)
-                if logFile:
-                    with open(logFile, 'a') as log:
-                        log.write('U: '+cmdInitStr)
+                writeCmdLog(logFile, 'User', cmdInitStr)
                 time.sleep(0.1)
         return False
     else:
         for i in range(tries):
             ackRpl = b'@ACK '+str(len(cmd)).encode("UTF-8")
             reply = ser.readline()
-            if logFile:
-                with open(logFile, 'a') as log:
-                    log.write('D: '+reply)
+            writeCmdLog(logFile, 'DStat', reply.decode())
             if reply.rstrip() == ackRpl:
                 cmdStr = cmd+'\n'
                 ser.write(cmdStr.encode('UTF-8'))  # Write command with ack msg if we get it
-                if logFile:
-                    with open(logFile, 'a') as log:
-                        log.write('U: '+cmdStr)
+                writeCmdLog(logFile, 'User', cmdStr)
                 for j in range(tries):
                     rplRpl = b'@RCV '+str(len(cmd)).encode("UTF-8")
                     reply = ser.readline()
-                    if logFile:
-                        with open(logFile, 'a') as log:
-                            log.write('D: '+reply)
+                    writeCmdLog(logFile, 'DStat', reply.decode())
                     if reply.rstrip() == rplRpl:
                         return True
                     else:
                         time.sleep(0.5)
                         ser.reset_input_buffer()
                         ser.write(cmdStr.encode('UTF-8'))
-                        if logFile:
-                            with open(logFile, 'a') as log:
-                                log.write('U: '+cmdStr)
+                        writeCmdLog(logFile, 'User', cmdStr)
                         time.sleep(0.1)
                 print('Failed to send and receive command'+cmd)
                 return False
@@ -162,9 +161,7 @@ def sendCommand(ser, cmd, tries=10, logFile=None):
                 time.sleep(0.5)
                 ser.reset_input_buffer()
                 ser.write(cmdInitStr)
-                if logFile:
-                    with open(logFile, 'a') as log:
-                        log.write('U: '+cmdInitStr)
+                writeCmdLog(logFile, 'User', cmdInitStr)
                 time.sleep(0.1)
         print('Failed to send and recieve acknowledgement')
         return False
@@ -194,7 +191,6 @@ def initializeDStat(path, timeout=3):
         return ser
     else:
         raise CommunicationsError(ser.name, "DStat read/write test failed.")
-
 
 # Function does not currently work, issues with send Command
 
