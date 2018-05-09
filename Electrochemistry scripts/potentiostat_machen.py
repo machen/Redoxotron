@@ -20,7 +20,6 @@ import datetime as dt
 import struct
 
 
-
 # Name of experiment: What does this mean? Think it's for the dstat
 exp_name = 'Redoxotron_4'
 # Name of file to write to
@@ -279,7 +278,7 @@ def convertCurrent(adcCode, gain, pgaGain=2):
 
 
 def runExperiment(ser, expLength, gain, expVolt, logFile=None,
-                  outFile='Test.Dat', rptTime=300,
+                  outFile='Test', rptTime=300,
                   timeFmtStr='%m/%d/%Y %H:%M:%S.%f'):
     expInit = sendCommand(ser, 'ER1 0')
     if expInit:
@@ -318,8 +317,10 @@ def runExperiment(ser, expLength, gain, expVolt, logFile=None,
                 reply = ser.readline()
                 data = reply.rstrip()  # Remove newline
                 sec, millisec, curr = struct.unpack('<HHl', data)
-                timeVals.append(float(sec)+float(millisec/1000.0))
-                currentVals.append(convertCurrent(curr, gain))
+                newTimeVal = float(sec)+float(millisec/1000.0)
+                newCurrVal = convertCurrent(curr, gain)
+                timeVals.append(newTimeVal)
+                currentVals.append(newCurrVal)
                 interval = dt.datetime.today()-checkTime
                 if interval >= rptTime:
                     print('Time: '+dt.datetime.today().strftime(timeFmtStr)
