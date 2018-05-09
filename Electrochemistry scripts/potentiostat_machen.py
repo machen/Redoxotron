@@ -278,12 +278,16 @@ def convertCurrent(adcCode, gain, pgaGain=2):
     return current
 
 
+def runExperiment(ser, startTime, expTime, avgTime, gain, logFile=None,
+                  outFile='Test.Dat', timeFmtStr='%m/%d/%Y %H:%M:%S.%f'):
+    return  # Returns true if experiment successful and data written
+
 logFile = 'CommandLog.log'  # USER EDITED
 serialPort = '/dev/ttyACM0'  # USER EDITED
 timeFmtStr = '%m/%d/%Y %H:%M:%S.%f'
 gain = 2  # USER EDITED
 
-with initializeDStat(serialPort, logFile=logFile) as ser:
+with initializeDStat(serialPort, logFile=logFile) as ser:  # Ensures closure of port on failure
     print('DStat Initialized')
     sendCommand(ser, 'V')
     version = readParamResponse(ser)
@@ -295,73 +299,6 @@ with initializeDStat(serialPort, logFile=logFile) as ser:
     startTime = dt.datetime.today()
     writeCmdLog(logFile, 'User', 'EXPERIMENT STARTED')
 
-# def write_params(ser):
-#         signal.signal(signal.SIGALRM, handler)
-#         signal.alarm(30)
-#         ser.write(b'!0\n')
-#         time.sleep(0.3)
-#         ser.write(b'V\n')
-#         time.sleep(0.3)
-# #        for line in ser:
-# #            print(line)
-# #            if line==(b'@DONE\n'):
-# #                print ("finished")
-# #                break
-# #            if line==(b'@RCV 0\n'):
-# #                print ("communication ok")
-# #                time.sleep(0.5)
-# #                break
-#         dac_mV = int(21846*(ex_mV/1000)+32768)
-#         ser.write(b'!9\n')
-#         time.sleep(1)
-#         ser.write(b'EA2 03 1\n')
-#         time.sleep(1)
-# # If changing gain, check number of characters to send
-# #        for line in ser:
-# #            print (line)
-# #            if line==(b'@DONE\n'):
-# #                print ("finished with")
-# #                break
-# #        print ("EA section")
-# #
-#         ser.write(b'!5\n')
-#         time.sleep(1)
-#         ser.write(b'EG1 0\n')
-#         time.sleep(1)
-# #
-# #        for line in ser:
-# #            print (line)
-# #            if line==(b'@DONE\n'):
-# #                print ("finished with")
-# #                break
-# #        print ("EG section")
-#         ser.write(b'!5\n')
-#         time.sleep(1)
-#         ser.write(b'ER1 0\n')
-#         time.sleep(1)
-#         ser.write(b'%d\n' % dac_mV)
-#         time.sleep(1)
-# #
-# #        for line in ser:
-# #            print (line)
-# #            if line==(b'@DONE\n'):
-# #                print ("finished with")
-# #                break
-# #        print ("ER section")
-#         ser.write(b'%d\n' % ex_time)
-#         time.sleep(1)
-#         print("\nparameters successfully uploaded....")
-
-#         if ser.is_open:
-#             print("port still open after writing params," +
-#                   " continuing to data collection loop...\n")
-#         else:
-#             print('problem with serial port, attempting to reset port')
-#             signal.alarm(0)
-#             open_port()
-
-#         signal.alarm(0)
-#         return ser
 
 # def data_collection(loopnumber, start_time, ser, refresh_time, looptime,
 #                     exptime, collection_countdown):
