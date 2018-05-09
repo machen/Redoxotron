@@ -97,7 +97,7 @@ class CommunicationsError(Error):
         self.message = message
 
 
-def writeCmdLog(logFile, type, cmd, timeFmt='%m/%d/%Y %H:%M%S.%f',
+def writeCmdLog(logFile, type, cmd, timeFmt='%m/%d/%Y %H:%M:%S.%f',
                 time=dt.datetime.today()):
     if not logFile:
         return
@@ -265,7 +265,7 @@ def resetDStat(ser):
 
 logFile = 'CommandLog.log'
 serialPort = '/dev/ttyACM0'
-timeFmtStr = '%m/%d/%Y %H:%M%S.%f'
+timeFmtStr = '%m/%d/%Y %H:%M:%S.%f'
 with initializeDStat(serialPort, logFile=logFile) as ser:
     sendCommand(ser, 'V')
     print(ser.readlines())
