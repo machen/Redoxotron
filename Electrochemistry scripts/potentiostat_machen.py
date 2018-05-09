@@ -17,8 +17,8 @@ import serial
 import time
 import numpy as np
 import datetime as dt
-import signal
-import pandas as pd
+import struct
+
 
 
 # Name of experiment: What does this mean? Think it's for the dstat
@@ -274,13 +274,65 @@ def convertCurrent(adcCode, gain, pgaGain=2):
     # Assumes that PGA value is 2. Will need to edit otherwise.
     gainValues = {0: 1, 1: 100, 2: 3000, 3: 3E4, 4: 3E5, 5: 3E6, 6: 3E7,
                   7: 1E8}
-    current = (adcCode/(pgaGain/2))*(1.5*gainValues[gain]/8388607)
+    current = (float(adcCode)/(pgaGain/2))*(1.5*gainValues[gain]/8388607)
     return current
 
 
-def runExperiment(ser, startTime, expTime, avgTime, gain, logFile=None,
-                  outFile='Test.Dat', timeFmtStr='%m/%d/%Y %H:%M:%S.%f'):
-    return  # Returns true if experiment successful and data written
+def runExperiment(ser, expLength, gain, expVolt, logFile=None,
+                  outFile='Test.Dat', rptTime=300,
+                  timeFmtStr='%m/%d/%Y %H:%M:%S.%f'):
+    expInit = sendCommand(ser, 'ER1 0')
+    if expInit:
+        reply = ser.readlines()
+        for line in reply:
+            if line.startswith(b'#'):
+                writeCmdLog(logFile, 'DStat', line.decode())
+            elif line.startswith(b'@RQP'):
+                writeCmdLog(logFile, 'DStat', line.decode())
+                break
+            else:
+                print('Unexpected response from DStat logged. Continuing.')
+                writeCmdLog(logFile, 'DStat', timeFmt=timeFmtStr)
+        try:
+            dacVolt = int(65536.0/3000*expVolt+32768)  # Experimental voltage should be reported in millivolts
+            expStr = str(dacVolt)+' '+str(expLength)+'\n'
+            ser.write(expStr.encode("UTF-8"))
+        except serial.SerialException:
+            print('Error Writing Voltage/Time')
+            return False
+        startTime = dt.datetime.today()
+        currentVals = []
+        timeVals = []
+        writeCmdLog(logFile, 'User', expStr, timeFmt=timeFmtStr)
+        rptTime = dt.timedelta(seconds=rptTime)
+        checkTime = dt.datetime.today()
+        interval = checkTime-startTime
+        while reply.rstrip() != b'@DONE':
+            reply = ser.readline()
+            if reply.startswith(b'#') or reply.startswith(b'@'):
+                # Log informational messages and reports from DStat
+                writeCmdLog(logFile, 'DStat', reply.decode())
+                continue
+            elif reply == b'B\n':
+                # Catch data line
+                reply = ser.readline()
+                data = reply.rstrip()  # Remove newline
+                sec, millisec, curr = struct.unpack('<HHl', data)
+                timeVals.append(float(sec)+float(millisec/1000.0))
+                currentVals.append(convertCurrent(curr, gain))
+                interval = dt.datetime.today()-checkTime
+                if interval >= rptTime:
+                    print('Time: '+dt.datetime.today().strftime(timeFmtStr)
+                          + ', Average Current: '+np.mean(currentVals))
+                    checkTime = dt.datetime.today()
+                continue
+        return True
+
+    else:
+        print('Failed to initialize experiment')
+        return False
+    return True  # Returns true if experiment successful and data written
+
 
 logFile = 'CommandLog.log'  # USER EDITED
 serialPort = '/dev/ttyACM0'  # USER EDITED
@@ -296,8 +348,6 @@ with initializeDStat(serialPort, logFile=logFile) as ser:  # Ensures closure of 
         raise ParameterUploadError('ADC', 'Check comms with DStat')
     if not gainSet:
         raise ParameterUploadError(gain, 'Check for correct gain')
-    startTime = dt.datetime.today()
-    writeCmdLog(logFile, 'User', 'EXPERIMENT STARTED')
 
 
 # def data_collection(loopnumber, start_time, ser, refresh_time, looptime,
