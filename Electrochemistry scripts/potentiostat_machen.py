@@ -216,15 +216,46 @@ def initializeDStat(path, timeout=3, logFile=None):
         raise CommunicationsError(ser.name, "DStat read/write test failed.")
 
 
-# Function does not currently work, issues with send Command
+def readParamResponse(ser, logFile=None, time=dt.datetime.today()):
+    reply = ser.readlines()
+    for line in reply:
+        if line.startswith(b'#'):
+            writeCmdLog(logFile, 'DStat', line, time=time)
+        elif line.rstrip() is b'@DONE':
+            return True  # If command completes, returns True
+        else:
+            print('Unexpected Response from DStat, Check Log')
+            writeCmdLog(logFile, 'DStat', time=time)
+    return False  # Should give a "fail" state if the @DONE reply is not recieved
+
+
+def setDStatParams(ser, gain=2, logFile=None):
+    try:
+        # Try set adc
+        adcSet = sendCommand(ser, 'EA2 A1 1')  # No need to change ADC settings
+        adcTime = dt.datetime.today()
+        if adcSet:
+            adcResp = readParamResponse(ser, logFile=logFile, time=adcTime)
+        else:
+            print("Writing ADC Params Failed")
+        gainSet = sendCommand(ser, 'EG'+str(gain))
+        gainTime = dt.datetime.today()
+        if gainSet:
+            gainResp = readParamResponse(ser, logFile=logFile, time=gainTime)
+        else:
+            print("Writing Gain Params Failed")
+        return adcResp, gainResp
+    except serial.SerialException:
+        print("Problems with Serial Port, Script Will not Continue")
+        return False, False
 
 
 def resetDStat(ser):
+    print('WARNING: FUNCTION WILL LIKELY FAIL')
     path = ser.name
     attempt = sendCommand(ser, 'R')
-    time.sleep(10)
+    ser.close()
     if attempt:
-        ser.close()
         ser = initializeDStat(path)
         return ser
     else:
@@ -235,8 +266,7 @@ logFile = 'CommandLog.log'
 serialPort = '/dev/ttyACM0'
 timeFmtStr = '%m/%d/%Y %H:%M%S.%f'
 with initializeDStat(serialPort, logFile=logFile) as ser:
-    sendCommand(ser, 'V', logFile=logFile)
-
+    sendCommand(ser, 'V')
 
 # def write_params(ser):
 #         signal.signal(signal.SIGALRM, handler)
