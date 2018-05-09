@@ -246,7 +246,7 @@ def setDStatParams(ser, gain=2, logFile=None):
             print("Writing Gain Params Failed")
         return adcResp, gainResp
     except serial.SerialException:
-        print("Problems with Serial Port, Script Will not Continue")
+        print("Problems with Serial Port, Parameters are not uploaded")
         return False, False
 
 
