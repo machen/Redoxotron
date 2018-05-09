@@ -103,11 +103,11 @@ def writeCmdLog(logFile, type, cmd, timeFmt='%m/%d/%Y %H:%M%S.%f',
         return
     with open(logFile, 'a') as log:
         if type is 'User':
-            log.write('U: '+cmd+' Time: '+time.strftime(timeFmt))
+            log.write(' Time: '+time.strftime(timeFmt)+'U: '+cmd.rstrip()+'\n')
         elif type is 'DStat':
-            log.write('D: '+cmd)
+            log.write(' Time: '+time.strftime(timeFmt)+'D: '+cmd.rstrip()+'\n')
         else:
-            log.write('?: '+cmd)
+            log.write(' Time: '+time.strftime(timeFmt)+'?: '+cmd.rstrip()+'\n')
         return
 
 
@@ -118,7 +118,7 @@ def sendCommand(ser, cmd, tries=10, logFile=None):
     ser.reset_input_buffer()
     cmdInitStr = b'!'+str(len(cmd)).encode("UTF-8")+b'\n'
     ser.write(cmdInitStr)  # Write initiator command
-    writeCmdLog(logFile, 'User', cmdInitStr)
+    writeCmdLog(logFile, 'User', cmdInitStr.decode())
     if len(cmd) == 0:  # 0 len cmd gives only a test. This tests for response
         for i in range(tries):
             reply = ser.readline()
@@ -132,7 +132,7 @@ def sendCommand(ser, cmd, tries=10, logFile=None):
                 time.sleep(0.5)
                 ser.reset_input_buffer()
                 ser.write(cmdInitStr)
-                writeCmdLog(logFile, 'User', cmdInitStr)
+                writeCmdLog(logFile, 'User', cmdInitStr.decode())
                 time.sleep(0.1)
         return False
     else:
@@ -156,7 +156,7 @@ def sendCommand(ser, cmd, tries=10, logFile=None):
                         ser.write(cmdStr.encode('UTF-8'))
                         writeCmdLog(logFile, 'User', cmdStr)
                         time.sleep(0.1)
-                print('Failed to send and receive command'+cmd)
+                print('Failed to send and receive command: '+cmd)
                 return False
             else:
                 time.sleep(0.5)
