@@ -220,12 +220,13 @@ def readParamResponse(ser, logFile=None, time=dt.datetime.today()):
     reply = ser.readlines()
     for line in reply:
         if line.startswith(b'#'):
-            writeCmdLog(logFile, 'DStat', line, time=time)
+            writeCmdLog(logFile, 'DStat', line.decode(), time=time)
         elif line.rstrip() is b'@DONE':
+            writeCmdLog(logFile, 'DStat', line.decode(), time=time)
             return True  # If command completes, returns True
         else:
             print('Unexpected Response from DStat, Check Log')
-            writeCmdLog(logFile, 'DStat', time=time)
+            writeCmdLog(logFile, 'DStat', line.decode(), time=time)
     return False  # Should give a "fail" state if the @DONE reply is not recieved
 
 
@@ -267,6 +268,9 @@ serialPort = '/dev/ttyACM0'
 timeFmtStr = '%m/%d/%Y %H:%M%S.%f'
 with initializeDStat(serialPort, logFile=logFile) as ser:
     sendCommand(ser, 'V')
+    print(ser.readlines())
+    adcSet, gainSet = setDStatParams(ser, gain=2, logFile=logFile)
+    print((adcSet, gainSet))
 
 # def write_params(ser):
 #         signal.signal(signal.SIGALRM, handler)
