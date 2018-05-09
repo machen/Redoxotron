@@ -135,6 +135,23 @@ def sendCommand(ser, cmd, tries=10, logFile=None):
                 writeCmdLog(logFile, 'User', cmdInitStr.decode())
                 time.sleep(0.1)
         return False
+    elif cmd is 'R':
+        # A successful reset command will disconnect the USB, so we need to skip the checks
+        for i in range(tries):
+            ackRpl = b'@ACK '+str(len(cmd)).encode("UTF-8")
+            reply = ser.readline()
+            writeCmdLog(logFile, 'DStat', reply.decode())
+            if reply.rstrip() == ackRpl:
+                cmdStr = cmd+'\n'
+                ser.write(cmdStr.encode('UTF-8'))  # Write command with ack msg if we get it
+                writeCmdLog(logFile, 'User', cmdStr)
+                return True
+            else:
+                time.sleep(0.5)
+                ser.reset_input_buffer()
+                ser.write(cmdInitStr)
+                writeCmdLog(logFile, 'User', cmdInitStr)
+                time.sleep(0.1)
     else:
         for i in range(tries):
             ackRpl = b'@ACK '+str(len(cmd)).encode("UTF-8")
