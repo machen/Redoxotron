@@ -187,10 +187,11 @@ def sendCommand(ser, cmd, tries=10, logFile=None):
 
 def initializeDStat(path, timeout=3, logFile=None):
     try:
-        for i in range(0,10):
+        for i in range(0, 10):
             ser = serial.Serial(path, rtscts=True, timeout=timeout,
                                 write_timeout=timeout)
     except serial.SerialException:
+        ser = None
         pass
         # basePortNum = path[-1]
         # basePath = path[:-1]  # Naively tries to iterate through numbered ports
@@ -207,6 +208,8 @@ def initializeDStat(path, timeout=3, logFile=None):
         # if not ser:
         #     raise serial.SerialException('Could not find correct serial port')
         # path = newPath
+    if not ser:
+        raise serial.SerialException('Could not connect to serial port')
     if sendCommand(ser, '', logFile=logFile):  # test empty command
         return ser
     else:
