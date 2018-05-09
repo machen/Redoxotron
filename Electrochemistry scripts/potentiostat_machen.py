@@ -16,7 +16,7 @@ ERRORS:
 import serial
 import time
 import numpy as np
-from datetime import datetime
+import datetime as dt
 import signal
 import pandas as pd
 
@@ -97,12 +97,13 @@ class CommunicationsError(Error):
         self.message = message
 
 
-def writeCmdLog(logFile, type, cmd):
+def writeCmdLog(logFile, type, cmd, timeFmt='%m/%d/%Y %H:%M%S.%f',
+                time=dt.datetime.today()):
     if not logFile:
         return
     with open(logFile, 'a') as log:
         if type is 'User':
-            log.write('U: '+cmd)
+            log.write('U: '+cmd+' Time: '+time.strftime(timeFmt))
         elif type is 'DStat':
             log.write('D: '+cmd)
         else:
@@ -167,7 +168,7 @@ def sendCommand(ser, cmd, tries=10, logFile=None):
         return False
 
 
-def initializeDStat(path, timeout=3):
+def initializeDStat(path, timeout=3, logFile=None):
     try:
         ser = serial.Serial(path, rtscts=True, timeout=timeout,
                             write_timeout=timeout)
@@ -187,23 +188,32 @@ def initializeDStat(path, timeout=3):
         if not ser:
             raise serial.SerialException('Could not find correct serial port')
         path = newPath
-    if sendCommand(ser, ''):  # test empty command
+    if sendCommand(ser, '', logFile=logFile):  # test empty command
         return ser
     else:
         raise CommunicationsError(ser.name, "DStat read/write test failed.")
 
+
 # Function does not currently work, issues with send Command
 
-# def resetDStat(ser):
-#     path = ser.name
-#     attempt = sendCommand(ser, 'R\n')
-#     time.sleep(10)
-#     if attempt:
-#         ser.close()
-#         ser = initializeDStat(path)
-#         return ser
-#     else:
-#         raise CommunicationsError(path, 'Reset has failed.')
+
+def resetDStat(ser):
+    path = ser.name
+    attempt = sendCommand(ser, 'R')
+    time.sleep(10)
+    if attempt:
+        ser.close()
+        ser = initializeDStat(path)
+        return ser
+    else:
+        raise CommunicationsError(path, 'Reset has failed.')
+
+
+logFile = 'CommandLog.log'
+serialPort = '/dev/ttyACM0'
+timeFmtStr = '%m/%d/%Y %H:%M%S.%f'
+with initializeDStat(serialPort, logFile=logFile) as ser:
+    sendCommand(ser, 'V', logFile=logFile)
 
 
 # def write_params(ser):
