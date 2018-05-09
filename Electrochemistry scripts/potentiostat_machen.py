@@ -103,11 +103,11 @@ def writeCmdLog(logFile, type, cmd, timeFmt='%m/%d/%Y %H:%M%S.%f',
         return
     with open(logFile, 'a') as log:
         if type is 'User':
-            log.write(' Time: '+time.strftime(timeFmt)+'U: '+cmd.rstrip()+'\n')
+            log.write(' Time: '+time.strftime(timeFmt)+', U: '+cmd.rstrip()+'\n')
         elif type is 'DStat':
-            log.write(' Time: '+time.strftime(timeFmt)+'D: '+cmd.rstrip()+'\n')
+            log.write(' Time: '+time.strftime(timeFmt)+', D: '+cmd.rstrip()+'\n')
         else:
-            log.write(' Time: '+time.strftime(timeFmt)+'?: '+cmd.rstrip()+'\n')
+            log.write(' Time: '+time.strftime(timeFmt)+', ?: '+cmd.rstrip()+'\n')
         return
 
 
