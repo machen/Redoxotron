@@ -97,6 +97,13 @@ class CommunicationsError(Error):
         self.message = message
 
 
+class ParameterUploadError(Error):
+    """Error class for failed parameter upload"""
+    def __init__(self, expression, message):
+        self.expression = expression
+        self.message = message
+
+
 def writeCmdLog(logFile, type, cmd, timeFmt='%m/%d/%Y %H:%M:%S.%f',
                 time=dt.datetime.today()):
     if not logFile:
@@ -221,7 +228,7 @@ def readParamResponse(ser, logFile=None, time=dt.datetime.today()):
     for line in reply:
         if line.startswith(b'#'):
             writeCmdLog(logFile, 'DStat', line.decode(), time=time)
-        elif line.rstrip() is b'@DONE':
+        elif line.rstrip() == b'@DONE':
             writeCmdLog(logFile, 'DStat', line.decode(), time=time)
             return True  # If command completes, returns True
         else:
@@ -263,14 +270,30 @@ def resetDStat(ser):
         raise CommunicationsError(path, 'Reset has failed.')
 
 
-logFile = 'CommandLog.log'
-serialPort = '/dev/ttyACM0'
+def convertCurrent(adcCode, gain, pgaGain=2):
+    # Assumes that PGA value is 2. Will need to edit otherwise.
+    gainValues = {0: 1, 1: 100, 2: 3000, 3: 3E4, 4: 3E5, 5: 3E6, 6: 3E7,
+                  7: 1E8}
+    current = (adcCode/(pgaGain/2))*(1.5*gainValues[gain]/8388607)
+    return current
+
+
+logFile = 'CommandLog.log'  # USER EDITED
+serialPort = '/dev/ttyACM0'  # USER EDITED
 timeFmtStr = '%m/%d/%Y %H:%M:%S.%f'
+gain = 2  # USER EDITED
+
 with initializeDStat(serialPort, logFile=logFile) as ser:
+    print('DStat Initialized')
     sendCommand(ser, 'V')
-    print(ser.readlines())
-    adcSet, gainSet = setDStatParams(ser, gain=2, logFile=logFile)
-    print((adcSet, gainSet))
+    version = readParamResponse(ser)
+    adcSet, gainSet = setDStatParams(ser, gain=gain, logFile=logFile)
+    if not adcSet:
+        raise ParameterUploadError('ADC', 'Check comms with DStat')
+    if not gainSet:
+        raise ParameterUploadError(gain, 'Check for correct gain')
+    startTime = dt.datetime.today()
+    writeCmdLog(logFile, 'User', 'EXPERIMENT STARTED')
 
 # def write_params(ser):
 #         signal.signal(signal.SIGALRM, handler)
