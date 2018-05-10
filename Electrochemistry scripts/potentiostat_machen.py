@@ -283,7 +283,13 @@ def runExperiment(ser, expLength, gain, expVolt, logFile=None,
             reply = ser.readline()
             if reply.startswith(b'#') or reply.startswith(b'@'):
                 # Log informational messages and reports from DStat
-                writeCmdLog(logFile, 'DStat', reply.decode())
+                try:
+                    writeCmdLog(logFile, 'DStat', reply.decode())
+                except UnicodeDecodeError as e:
+                    print(reply)
+                    print(e)
+                    print('Error in DStat reply formatting, continuing')
+                    pass
                 continue
             elif reply == b'B\n':
                 # Catch data line
