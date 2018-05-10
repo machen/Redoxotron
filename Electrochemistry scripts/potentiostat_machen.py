@@ -1,16 +1,16 @@
 """
 TO DO LIST:
 1) Rewrite major functionality
-    a) Write parameters to dstat and file
-    b) Start experiment
-    c) Read in data
-    d) Output data to some type of file
-2) Implement clean exits for serial ports
-3) Implement logging of errors and commands
 
-ERRORS:
-1) Reset DStat doesn't work period.
-2) Port search also does not seem to work, get serial exceptions where port appears to already be in use.
+    b) Start experiment
+        Need to be checked
+    c) Read in data
+        Needs to be checked
+    d) Output data to some type of file
+        Needs to be implemented
+2) Handling for non-data lines (based on ben's code, known to happen)
+    Could catch errors and output problematic line to log
+    Should catch serial errors and exit
 """
 
 import serial
