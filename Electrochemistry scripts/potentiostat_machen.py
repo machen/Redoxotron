@@ -18,6 +18,7 @@ import time
 import numpy as np
 import datetime as dt
 import struct
+import csv
 
 
 # Name of experiment: What does this mean? Think it's for the dstat
@@ -278,7 +279,7 @@ def convertCurrent(adcCode, gain, pgaGain=2):
 
 
 def runExperiment(ser, expLength, gain, expVolt, logFile=None,
-                  outFile='Test', rptTime=300,
+                  dataFile='Test', rptTime=300,
                   timeFmtStr='%m/%d/%Y %H:%M:%S.%f'):
     expInit = sendCommand(ser, 'ER1 0')
     if expInit:
@@ -300,6 +301,7 @@ def runExperiment(ser, expLength, gain, expVolt, logFile=None,
             print('Error Writing Voltage/Time')
             return False
         startTime = dt.datetime.today()
+        # Should initialize data file with startTime in header.
         currentVals = []
         timeVals = []
         writeCmdLog(logFile, 'User', expStr, timeFmt=timeFmtStr)
@@ -321,6 +323,10 @@ def runExperiment(ser, expLength, gain, expVolt, logFile=None,
                 newCurrVal = convertCurrent(curr, gain)
                 timeVals.append(newTimeVal)
                 currentVals.append(newCurrVal)
+                with open(dataFile+'.csv', 'a') as outFile:
+                    dataWriter = csv.writer(outFile, dialect='excel')
+                    dataWriter.writerow([newTimeVal, newCurrVal])
+
                 interval = dt.datetime.today()-checkTime
                 if interval >= rptTime:
                     print('Time: '+dt.datetime.today().strftime(timeFmtStr)
