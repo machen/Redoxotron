@@ -2,6 +2,8 @@
 TO DO LIST:
 1) Testing over long times with actual setup
 2) Check logging (ultimately the problematic lines are... junk)
+3) Work on getting a restart to work
+4) Get the serial port to close on keyboard interrupt (does not right now)
 """
 
 import serial
@@ -14,7 +16,7 @@ import os.path
 
 logFile = 'CommandLog.log'  # USER EDITED, path for output log
 serialPort = '/dev/ttyACM0'  # USER EDITED, path to serial port
-gain = 2  # USER EDITED, transducer gain, see DStat documentation
+gain = 1  # USER EDITED, transducer gain, see DStat documentation
 
 #gains allowed by dstat. use lowest value to detect targeted current diffs
 #define POT_GAIN_0 0
