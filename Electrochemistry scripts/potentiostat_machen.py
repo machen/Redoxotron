@@ -240,11 +240,14 @@ def runExperiment(ser, expLength, gain, expVolt, logFile=None,
                 writeCmdLog(logFile, 'DStat', line.decode(), timeFmt=timeFmtStr)
         try:
             dacVolt = int(65536.0/3000*expVolt+32768)  # Experimental voltage should be reported in millivolts
-            expStr = str(dacVolt)+'\n'+str(expLength)+'\n'
+            expStr = str(dacVolt)+'\n'
+            ser.write(expStr.encode("UTF-8"))
+            expStr = str(expLength)+'\n'
             ser.write(expStr.encode("UTF-8"))
         except serial.SerialException:
             print('Error Writing Voltage/Time to serial port')
             return False
+        print('Experimental parameters uploaded')
         startTime = dt.datetime.today()
         writeCmdLog(logFile, 'User', expStr, timeFmt=timeFmtStr,
                     time=startTime)
