@@ -27,7 +27,7 @@ gain = 2  # USER EDITED, transducer gain, see DStat documentation
 dataFile = 'Test'  # USER EDITED, path for dataFile
 expLength = 600  # USER EDITED, Seconds, length of experiment
 expVolt = 100  # USER EDITED, mV, target voltage
-reportTime = 300  # USER EDITED, Seconds, time for reporting averages
+reportTime = 30  # USER EDITED, Seconds, time for reporting averages
 
 
 class Error(Exception):
@@ -237,10 +237,10 @@ def runExperiment(ser, expLength, gain, expVolt, logFile=None,
                 break
             else:
                 print('Unexpected response from DStat logged. Continuing.')
-                writeCmdLog(logFile, 'DStat', timeFmt=timeFmtStr)
+                writeCmdLog(logFile, 'DStat', line.decode(), timeFmt=timeFmtStr)
         try:
             dacVolt = int(65536.0/3000*expVolt+32768)  # Experimental voltage should be reported in millivolts
-            expStr = str(dacVolt)+' '+str(expLength)+'\n'
+            expStr = str(dacVolt)+'\n'+str(expLength)+'\n'
             ser.write(expStr.encode("UTF-8"))
         except serial.SerialException:
             print('Error Writing Voltage/Time to serial port')
@@ -258,6 +258,7 @@ def runExperiment(ser, expLength, gain, expVolt, logFile=None,
             dataWriter = csv.writer(outFile, dialect='excel')
             dataWriter.writerow(['Experimental start: ' +
                                 startTime.strftime(timeFmtStr)])
+            dataWriter.writerow(['Gain value: '+str(gainValues[gain])])
             dataWriter.writerow(['Elapsed Time (s)', 'Current (A)'])
         # Initialize averaging arrays
         currentVals = []
@@ -265,7 +266,12 @@ def runExperiment(ser, expLength, gain, expVolt, logFile=None,
         rptTime = dt.timedelta(seconds=rptTime)
         checkTime = dt.datetime.today()
         interval = checkTime-startTime
+        reply = ser.readline()
         while reply.rstrip() != b'@DONE':
+            if ser.in_waiting == 0:
+                time.sleep(0.1)
+                # Don't want to try to readlines on empty serial port
+                continue
             reply = ser.readline()
             if reply.startswith(b'#') or reply.startswith(b'@'):
                 # Log informational messages and reports from DStat
@@ -290,13 +296,18 @@ def runExperiment(ser, expLength, gain, expVolt, logFile=None,
                         dataWriter.writerow([newTimeVal, newCurrVal])
                 except struct.error:
                     print("Formatting problem, line written to log, continuing")
-                    writeCmdLog(logFile, 'DStat', reply,
-                                time=dt.datetime.today())
+                    try:
+                        writeCmdLog(logFile, 'DStat', reply.decode(),
+                                    time=dt.datetime.today())
+                    except UnicodeDecodeError as e:  # NEed to catch the correct exception
+                        print(e)
+                        print('Problematic command not logged')
+                        pass
                     pass
                 interval = dt.datetime.today()-checkTime
                 if interval >= rptTime:
                     print('Time: '+dt.datetime.today().strftime(timeFmtStr)
-                          + ', Average Current: '+np.mean(currentVals))
+                          + ', Average Current: '+str(np.mean(currentVals)))
                     checkTime = dt.datetime.today()
                 continue
         print('Experiment Completed')
@@ -308,15 +319,18 @@ def runExperiment(ser, expLength, gain, expVolt, logFile=None,
 
 
 timeFmtStr = '%m/%d/%Y %H:%M:%S.%f'
+gainValues = {0: 1, 1: 100, 2: 3000, 3: 3E4, 4: 3E5, 5: 3E6, 6: 3E7,
+              7: 1E8}
 with initializeDStat(serialPort, logFile=logFile) as ser:  # Ensures closure of port on failure
     print('DStat Initialized')
     sendCommand(ser, 'V')
-    version = readParamResponse(ser)
+    print(ser.readlines())
     adcSet, gainSet = setDStatParams(ser, gain=gain, logFile=logFile)
     if not adcSet:
         raise ParameterUploadError('ADC', 'Check comms with DStat')
     if not gainSet:
         raise ParameterUploadError(gain, 'Check for correct gain')
+    print('Parameters uploaded')
     exp = runExperiment(ser, expLength, gain, expVolt,
                         logFile=logFile, dataFile=dataFile,
                         rptTime=reportTime)
