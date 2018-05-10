@@ -221,7 +221,7 @@ def convertCurrent(adcCode, gain, pgaGain=2):
     # Assumes that PGA value is 2. Will need to edit otherwise.
     gainValues = {0: 1, 1: 100, 2: 3000, 3: 3E4, 4: 3E5, 5: 3E6, 6: 3E7,
                   7: 1E8}
-    current = (float(adcCode)/(pgaGain/2))*(1.5*gainValues[gain]/8388607)
+    current = (float(adcCode)/(pgaGain/2))*(1.5/gainValues[gain]/8388607)
     return current
 
 
@@ -244,15 +244,15 @@ def runExperiment(ser, expLength, gain, expVolt, logFile=None,
             dacVolt = int(65536.0/3000*expVolt+32768)  # Experimental voltage should be reported in millivolts
             expStr = str(dacVolt)+'\n'
             ser.write(expStr.encode("UTF-8"))
+            writeCmdLog(logFile, 'User', expStr, time=dt.datetime.today())
             expStr = str(expLength)+'\n'
             ser.write(expStr.encode("UTF-8"))
+            writeCmdLog(logFile, 'User', expStr, time=dt.datetime.today())
         except serial.SerialException:
             print('Error Writing Voltage/Time to serial port')
             return False
         print('Experimental parameters uploaded')
         startTime = dt.datetime.today()
-        writeCmdLog(logFile, 'User', expStr, timeFmt=timeFmtStr,
-                    time=startTime)
         # Create dataFile
         if os.path.isfile(dataFile+'.csv'):
             # Make a new file if the data file already exists
@@ -316,6 +316,7 @@ def runExperiment(ser, expLength, gain, expVolt, logFile=None,
                           + ', Average Current: '+str(np.mean(currentVals)))
                     checkTime = dt.datetime.today()
                 continue
+        writeCmdLog(logFile, 'DStat', reply.decode(), time=dt.datetime.today())
         print('Experiment Completed')
         return True
 
