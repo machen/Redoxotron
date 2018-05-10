@@ -19,7 +19,7 @@ import numpy as np
 import datetime as dt
 import struct
 import csv
-
+import os.path
 
 # Name of experiment: What does this mean? Think it's for the dstat
 exp_name = 'Redoxotron_4'
@@ -298,13 +298,25 @@ def runExperiment(ser, expLength, gain, expVolt, logFile=None,
             expStr = str(dacVolt)+' '+str(expLength)+'\n'
             ser.write(expStr.encode("UTF-8"))
         except serial.SerialException:
-            print('Error Writing Voltage/Time')
+            print('Error Writing Voltage/Time to serial port')
             return False
         startTime = dt.datetime.today()
-        # Should initialize data file with startTime in header.
+        writeCmdLog(logFile, 'User', expStr, timeFmt=timeFmtStr,
+                    time=startTime)
+        # Create dataFile
+        if os.path.isfile(dataFile+'.csv'):
+            # Make a new file if the data file already exists
+            dataFile = dataFile+'new.csv'
+        else:
+            dataFile = dataFile+'.csv'
+        with open(dataFile, 'a') as outFile:
+            dataWriter = csv.writer(outFile, dialect='excel')
+            dataWriter.writerow(['Experimental start: ' +
+                                startTime.strftime(timeFmtStr)])
+            dataWriter.writerow(['Elapsed Time (s)', 'Current (A)'])
+        # Initialize averaging arrays
         currentVals = []
         timeVals = []
-        writeCmdLog(logFile, 'User', expStr, timeFmt=timeFmtStr)
         rptTime = dt.timedelta(seconds=rptTime)
         checkTime = dt.datetime.today()
         interval = checkTime-startTime
@@ -316,35 +328,48 @@ def runExperiment(ser, expLength, gain, expVolt, logFile=None,
                 continue
             elif reply == b'B\n':
                 # Catch data line
-                reply = ser.readline()
+                try:
+                    reply = ser.readline()
+                except serial.SerialException:
+                    print('Serial problems, aborting experiment')
+                    return False
                 data = reply.rstrip()  # Remove newline
-                sec, millisec, curr = struct.unpack('<HHl', data)
-                newTimeVal = float(sec)+float(millisec/1000.0)
-                newCurrVal = convertCurrent(curr, gain)
-                timeVals.append(newTimeVal)
-                currentVals.append(newCurrVal)
-                with open(dataFile+'.csv', 'a') as outFile:
-                    dataWriter = csv.writer(outFile, dialect='excel')
-                    dataWriter.writerow([newTimeVal, newCurrVal])
-
+                try:
+                    sec, millisec, curr = struct.unpack('<HHl', data)
+                    newTimeVal = float(sec)+float(millisec/1000.0)
+                    newCurrVal = convertCurrent(curr, gain)
+                    timeVals.append(newTimeVal)
+                    currentVals.append(newCurrVal)
+                    with open(dataFile, 'a') as outFile:
+                        dataWriter = csv.writer(outFile, dialect='excel')
+                        dataWriter.writerow([newTimeVal, newCurrVal])
+                except struct.error:
+                    print("Formatting problem, line written to log, continuing")
+                    writeCmdLog(logFile, 'DStat', reply,
+                                time=dt.datetime.today())
+                    pass
                 interval = dt.datetime.today()-checkTime
                 if interval >= rptTime:
                     print('Time: '+dt.datetime.today().strftime(timeFmtStr)
                           + ', Average Current: '+np.mean(currentVals))
                     checkTime = dt.datetime.today()
                 continue
+        print('Experiment Completed')
         return True
 
     else:
         print('Failed to initialize experiment')
         return False
-    return True  # Returns true if experiment successful and data written
 
 
 logFile = 'CommandLog.log'  # USER EDITED
 serialPort = '/dev/ttyACM0'  # USER EDITED
 timeFmtStr = '%m/%d/%Y %H:%M:%S.%f'
 gain = 2  # USER EDITED
+dataFile = 'Test'  # USER EDITED
+expLength = 600  # USER EDITED, Seconds
+expVolt = 100  # USER EDITED, mV
+reportTime = 300  # USER EDITED, Seconds
 
 with initializeDStat(serialPort, logFile=logFile) as ser:  # Ensures closure of port on failure
     print('DStat Initialized')
@@ -355,6 +380,9 @@ with initializeDStat(serialPort, logFile=logFile) as ser:  # Ensures closure of 
         raise ParameterUploadError('ADC', 'Check comms with DStat')
     if not gainSet:
         raise ParameterUploadError(gain, 'Check for correct gain')
+    exp = runExperiment(ser, expLength, gain, expVolt,
+                        logFile=logFile, dataFile=dataFile,
+                        rptTime=reportTime)
 
 
 # def data_collection(loopnumber, start_time, ser, refresh_time, looptime,
