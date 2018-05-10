@@ -185,7 +185,7 @@ def readParamResponse(ser, logFile=None, time=dt.datetime.today()):
 def setDStatParams(ser, gain=2, logFile=None):
     try:
         # Try set adc
-        adcSet = sendCommand(ser, 'EA2 A1 1')  # No need to change ADC settings
+        adcSet = sendCommand(ser, 'EA2 03 1')  # No need to change ADC settings
         adcTime = dt.datetime.today()
         if adcSet:
             adcResp = readParamResponse(ser, logFile=logFile, time=adcTime)
