@@ -1,16 +1,7 @@
 """
 TO DO LIST:
-1) Rewrite major functionality
-
-    b) Start experiment
-        Need to be checked
-    c) Read in data
-        Needs to be checked
-    d) Output data to some type of file
-        Needs to be implemented
-2) Handling for non-data lines (based on ben's code, known to happen)
-    Could catch errors and output problematic line to log
-    Should catch serial errors and exit
+1) Testing over long times with actual setup
+2) Check logging (ultimately the problematic lines are... junk)
 """
 
 import serial
@@ -24,6 +15,17 @@ import os.path
 logFile = 'CommandLog.log'  # USER EDITED, path for output log
 serialPort = '/dev/ttyACM0'  # USER EDITED, path to serial port
 gain = 2  # USER EDITED, transducer gain, see DStat documentation
+
+#gains allowed by dstat. use lowest value to detect targeted current diffs
+#define POT_GAIN_0 0
+#define POT_GAIN_100 1
+#define POT_GAIN_3k 2
+#define POT_GAIN_30k 3
+#define POT_GAIN_300k 4
+#define POT_GAIN_3M 5
+#define POT_GAIN_30M 6
+#define POT_GAIN_100M 7
+
 dataFile = 'Test'  # USER EDITED, path for dataFile
 expLength = 600  # USER EDITED, Seconds, length of experiment
 expVolt = 100  # USER EDITED, mV, target voltage
@@ -140,7 +142,7 @@ def sendCommand(ser, cmd, tries=10, logFile=None):
 def initializeDStat(path, timeout=3, logFile=None):
     try:
         for i in range(0, 10):
-            ser = serial.Serial(path, rtscts=True, timeout=timeout,
+            ser = serial.Serial(path, timeout=timeout,
                                 write_timeout=timeout)
     except serial.SerialException:
         ser = None
@@ -262,6 +264,7 @@ def runExperiment(ser, expLength, gain, expVolt, logFile=None,
             dataWriter.writerow(['Experimental start: ' +
                                 startTime.strftime(timeFmtStr)])
             dataWriter.writerow(['Gain value: '+str(gainValues[gain])])
+            dataWriter.writerow(['Experimental Voltage: '+str(expVolt)+' mV'])
             dataWriter.writerow(['Elapsed Time (s)', 'Current (A)'])
         # Initialize averaging arrays
         currentVals = []
