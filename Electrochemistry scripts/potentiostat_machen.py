@@ -274,8 +274,8 @@ def runExperiment(ser, expLength, gain, expVolt, logFile=None,
         checkTime = dt.datetime.today()
         interval = checkTime-startTime
         reply = ser.readline()
+        print('Entering main expeirmental')
         while reply.rstrip() != b'@DONE':
-            print('Entered main expeirmental loopvalue')
             if ser.in_waiting == 0:
                 time.sleep(0.1)
                 # Don't want to try to readlines on empty serial port
