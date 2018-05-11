@@ -5,7 +5,6 @@ TO DO LIST:
 3) Work on getting a restart to work
 4) Get the serial port to close on keyboard interrupt (does not right now)
 """
-
 import serial
 import time
 import numpy as np
@@ -14,24 +13,22 @@ import struct
 import csv
 import os.path
 
-logFile = 'CommandLog.log'  # USER EDITED, path for output log
+logFile = 'Redoxotron4_Test2_CmdLog.log'  # USER EDITED, path for output log
 serialPort = '/dev/ttyACM0'  # USER EDITED, path to serial port
 gain = 1  # USER EDITED, transducer gain, see DStat documentation
-
-#gains allowed by dstat. use lowest value to detect targeted current diffs
-#define POT_GAIN_0 0
-#define POT_GAIN_100 1
-#define POT_GAIN_3k 2
-#define POT_GAIN_30k 3
-#define POT_GAIN_300k 4
-#define POT_GAIN_3M 5
-#define POT_GAIN_30M 6
-#define POT_GAIN_100M 7
-
-dataFile = 'Test'  # USER EDITED, path for dataFile
-expLength = 600  # USER EDITED, Seconds, length of experiment
-expVolt = 100  # USER EDITED, mV, target voltage
-reportTime = 30  # USER EDITED, Seconds, time for reporting averages
+# Gains allowed by dstat. use lowest value to detect targeted current diffs
+# define POT_GAIN_0 0
+# define POT_GAIN_100 1
+# define POT_GAIN_3k 2
+# define POT_GAIN_30k 3
+# define POT_GAIN_300k 4
+# define POT_GAIN_3M 5
+# define POT_GAIN_30M 6
+# define POT_GAIN_100M 7
+dataFile = 'Redoxotron4_Test2'  # USER EDITED, path for dataFile
+expLength = 72*60*60  # USER EDITED, Seconds, length of experiment
+expVolt = 1000  # USER EDITED, mV, target voltage
+reportTime = 300  # USER EDITED, Seconds, time for reporting averages
 
 
 class Error(Exception):
@@ -144,7 +141,7 @@ def sendCommand(ser, cmd, tries=10, logFile=None):
 def initializeDStat(path, timeout=3, logFile=None):
     try:
         for i in range(0, 10):
-            ser = serial.Serial(path, timeout=timeout,
+            ser = serial.Serial(path, rtscts=True, timeout=timeout,
                                 write_timeout=timeout)
     except serial.SerialException:
         ser = None
@@ -255,6 +252,8 @@ def runExperiment(ser, expLength, gain, expVolt, logFile=None,
             return False
         print('Experimental parameters uploaded')
         startTime = dt.datetime.today()
+        writeCmdLog(logFile, 'User', 'Experiment Start', timeFmt=timeFmtStr,
+                    time=startTime)
         # Create dataFile
         if os.path.isfile(dataFile+'.csv'):
             # Make a new file if the data file already exists
@@ -266,7 +265,7 @@ def runExperiment(ser, expLength, gain, expVolt, logFile=None,
             dataWriter.writerow(['Experimental start: ' +
                                 startTime.strftime(timeFmtStr)])
             dataWriter.writerow(['Gain value: '+str(gainValues[gain])])
-            dataWriter.writerow(['Experimental Voltage: '+str(expVolt)+' mV'])
+            dataWriter.writerow(['Experimental voltage: '+str(expVolt)+' mV'])
             dataWriter.writerow(['Elapsed Time (s)', 'Current (A)'])
         # Initialize averaging arrays
         currentVals = []
@@ -276,6 +275,7 @@ def runExperiment(ser, expLength, gain, expVolt, logFile=None,
         interval = checkTime-startTime
         reply = ser.readline()
         while reply.rstrip() != b'@DONE':
+            print('Entered main expeirmental loopvalue')
             if ser.in_waiting == 0:
                 time.sleep(0.1)
                 # Don't want to try to readlines on empty serial port
@@ -288,8 +288,10 @@ def runExperiment(ser, expLength, gain, expVolt, logFile=None,
                 except UnicodeDecodeError as e:
                     print(reply)
                     print(e)
-                    print('Error in DStat reply formatting, continuing')
-                    pass
+                        print(reply)
+                        print(e)
+                        print('Problematic reply from DStat not logged')
+                        pass
                 continue
             elif reply == b'B\n':
                 # Catch data line
@@ -324,7 +326,6 @@ def runExperiment(ser, expLength, gain, expVolt, logFile=None,
                           + ', Average Current: '+str(np.mean(currentVals)))
                     checkTime = dt.datetime.today()
                 continue
-        writeCmdLog(logFile, 'DStat', reply.decode(), time=dt.datetime.today())
         print('Experiment Completed')
         return True
 
