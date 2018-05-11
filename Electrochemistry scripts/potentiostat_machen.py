@@ -286,8 +286,6 @@ def runExperiment(ser, expLength, gain, expVolt, logFile=None,
                 try:
                     writeCmdLog(logFile, 'DStat', reply.decode())
                 except UnicodeDecodeError as e:
-                    print(reply)
-                    print(e)
                         print(reply)
                         print(e)
                         print('Problematic reply from DStat not logged')
