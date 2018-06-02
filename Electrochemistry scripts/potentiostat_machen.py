@@ -226,7 +226,7 @@ def initializeExperiment(ser, expLength, expVolt, logFile=None,
         timeArray = [expLength]
     try:
         expInitCmd = 'ER{} 0\n'.format(nSteps)
-        expInit = sendCommand(ser, expInitCmd.encode("UTF-8"))
+        expInit = sendCommand(ser, expInitCmd)
         if expInit:
             time.sleep(1)  # Give the dstat a chance to process
             reply = ser.readlines()
@@ -244,21 +244,27 @@ def initializeExperiment(ser, expLength, expVolt, logFile=None,
             dacVolt = int(65536.0/3000*expVolt+32768)
             dacCmd = str(dacVolt)+'\n'
             dacReply = '#INFO: DAC: '+str(dacVolt)
-            for i in range(0, nSteps-1):
+            for i in range(0, nSteps):
                 ser.write(dacCmd.encode("UTF-8"))
                 writeCmdLog(logFile, 'User', dacCmd, time=dt.datetime.today())
+                if ser.in_waiting == 0:
+                    print("Issue in voltage parameters protocol")
+                    continue
                 reply = ser.readline()
                 if reply.rstrip().decode() == dacReply:
                     writeCmdLog(logFile, 'DStat', line.decode(),
                                 time=dt.datetime.today())
                 else:
-                    print("Failed to set correct voltage, aborting")
-                    return False
+                    print("Issue in voltage parameters protocol")
+            print("Cleaning up leftovers")
+            if ser.in_waiting > 0:
+                replies = ser.read(ser.in_waiting)
+                writeCmdLog(logFile, "DStat", replies.decode())
             # Write times
             for timePt in timeArray:
                 timeCmd = str(timePt)+'\n'
                 timeReply = '#INFO: Time: '+str(timePt)
-                ser.write(timeCmd)
+                ser.write(timeCmd.encode("UTF-8"))
                 writeCmdLog(logFile, 'User', timeCmd)
                 reply = ser.readline()
                 if line.rstrip().decode() == timeReply:
@@ -266,10 +272,12 @@ def initializeExperiment(ser, expLength, expVolt, logFile=None,
                                 time=dt.datetime.today())
                     continue
                 else:
-                    print('Failed to set times correctly, aborting')
-                    return False
+                    print('Issue in time parameter protocol')
+            print("Cleaning up leftovers")
+            if ser.in_waiting > 0:
+                replies = ser.read(ser.in_waiting)
+                writeCmdLog(logFile, "DStat", replies.decode())
             return True
-
         else:
             print('Failed to initialize experiment')
             return False
