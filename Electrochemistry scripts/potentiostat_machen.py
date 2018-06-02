@@ -51,6 +51,11 @@ class ParameterUploadError(Error):
         self.expression = expression
         self.message = message
 
+class ExperimentalError(Error):
+    """Error class for failed experiment"""
+    def __init__(self, message):
+        self.message = message
+
 
 def writeCmdLog(logFile, type, cmd, timeFmt='%m/%d/%Y %H:%M:%S.%f',
                 time=dt.datetime.today()):
@@ -212,11 +217,66 @@ def initializeExperiment(ser, expLength, expVolt, logFile=None,
     if expLength > maxLength:
         print('Experiment length is too long for single step, will be run in multiple steps')
         nSteps = int(expLength/maxLength)
-        stepArray = [65534]*nSteps  # Initialize array of time steps
+        timeArray = [65534]*nSteps  # Initialize array of time steps
         if expLength % maxLength > 0:
             nSteps += 1
-            stepArray.append(expLength % maxLength)
-        voltArray = [int(65536.0/3000*expVolt+32768)]*nSteps
+            timeArray.append(expLength % maxLength)
+    else:
+        nSteps = 1
+        timeArray = [expLength]
+    try:
+        expInitCmd = 'ER{} 0\n'.format(nSteps)
+        expInit = sendCommand(ser, expInitCmd.encode("UTF-8"))
+        if expInit:
+            time.sleep(1)  # Give the dstat a chance to process
+            reply = ser.readlines()
+            # Check for correct replies
+            for line in reply:
+                if line.startswith(b'#'):
+                    writeCmdLog(logFile, 'DStat', line.decode())
+                elif line.startswith(b'@RQP'):
+                    writeCmdLog(logFile, 'DStat', line.decode())
+                    break  # Continue as dstat is now asking for the parameters
+                else:
+                    print('Unexpected response from DStat logged. Continuing.')
+                    writeCmdLog(logFile, 'DStat', line.decode(), timeFmt=timeFmtStr)
+            # Write the parameters: first the voltage steps, then the time steps
+            dacVolt = int(65536.0/3000*expVolt+32768)
+            dacCmd = str(dacVolt)+'\n'
+            dacReply = '#INFO: DAC: '+str(dacVolt)
+            for i in range(0, nSteps-1):
+                ser.write(dacCmd.encode("UTF-8"))
+                writeCmdLog(logFile, 'User', dacCmd, time=dt.datetime.today())
+                reply = ser.readline()
+                if reply.rstrip().decode() == dacReply:
+                    writeCmdLog(logFile, 'DStat', line.decode(),
+                                time=dt.datetime.today())
+                else:
+                    print("Failed to set correct voltage, aborting")
+                    return False
+            # Write times
+            for timePt in timeArray:
+                timeCmd = str(timePt)+'\n'
+                timeReply = '#INFO: Time: '+str(timePt)
+                ser.write(timeCmd)
+                writeCmdLog(logFile, 'User', timeCmd)
+                reply = ser.readline()
+                if line.rstrip().decode() == timeReply:
+                    writeCmdLog(logFile, 'DStat', line.decode(),
+                                time=dt.datetime.today())
+                    continue
+                else:
+                    print('Failed to set times correctly, aborting')
+                    return False
+            return True
+
+        else:
+            print('Failed to initialize experiment')
+            return False
+    except serial.SerialException:
+        print("Problems with Serial Port, Parameters are not uploaded")
+        return False
+
 
 def resetDStat(ser):
     print('WARNING: FUNCTION WILL LIKELY FAIL')
@@ -241,33 +301,13 @@ def convertCurrent(adcCode, gain, pgaGain=2):
 def runExperiment(ser, expLength, gain, expVolt, logFile=None,
                   dataFile='Test', rptTime=300,
                   timeFmtStr='%m/%d/%Y %H:%M:%S.%f'):
-    expInit = sendCommand(ser, 'ER1 0')
-    if expInit:
-        reply = ser.readlines()
-        for line in reply:
-            if line.startswith(b'#'):
-                writeCmdLog(logFile, 'DStat', line.decode())
-            elif line.startswith(b'@RQP'):
-                writeCmdLog(logFile, 'DStat', line.decode())
-                break
-            else:
-                print('Unexpected response from DStat logged. Continuing.')
-                writeCmdLog(logFile, 'DStat', line.decode(), timeFmt=timeFmtStr)
-        try:
-            dacVolt = int(65536.0/3000*expVolt+32768)  # Experimental voltage should be reported in millivolts
-            expStr = str(dacVolt)+'\n'
-            ser.write(expStr.encode("UTF-8"))
-            writeCmdLog(logFile, 'User', expStr, time=dt.datetime.today())
-            expStr = str(expLength)+'\n'
-            ser.write(expStr.encode("UTF-8"))
-            writeCmdLog(logFile, 'User', expStr, time=dt.datetime.today())
-        except serial.SerialException:
-            print('Error Writing Voltage/Time to serial port')
+        expStart = initializeExperiment(ser, expLength, expVolt,
+                                        logFile=logFile)
+        if not expStart:
+            print('Failed to initialize experiment, aborting')
             return False
         print('Experimental parameters uploaded')
         startTime = dt.datetime.today()
-        writeCmdLog(logFile, 'User', 'Experiment Start', timeFmt=timeFmtStr,
-                    time=startTime)
         # Create dataFile
         if os.path.isfile(dataFile+'.csv'):
             # Make a new file if the data file already exists
@@ -287,8 +327,10 @@ def runExperiment(ser, expLength, gain, expVolt, logFile=None,
         rptTime = dt.timedelta(seconds=rptTime)
         checkTime = dt.datetime.today()
         interval = checkTime-startTime
+        writeCmdLog(logFile, 'User', 'Experiment Start', timeFmt=timeFmtStr,
+                    time=startTime)
         reply = ser.readline()
-        print('Entering main expeirmental')
+        print('Entering main expeirmental loop')
         while reply.rstrip() != b'@DONE':
             if ser.in_waiting == 0:
                 time.sleep(0.1)
@@ -341,10 +383,6 @@ def runExperiment(ser, expLength, gain, expVolt, logFile=None,
         print('Experiment Completed')
         return True
 
-    else:
-        print('Failed to initialize experiment')
-        return False
-
 
 timeFmtStr = '%m/%d/%Y %H:%M:%S.%f'
 gainValues = {0: 1, 1: 100, 2: 3000, 3: 3E4, 4: 3E5, 5: 3E6, 6: 3E7,
@@ -362,3 +400,5 @@ with initializeDStat(serialPort, logFile=logFile) as ser:  # Ensures closure of 
     exp = runExperiment(ser, expLength, gain, expVolt,
                         logFile=logFile, dataFile=dataFile,
                         rptTime=reportTime)
+    if not exp:
+        raise ExperimentalError("Initialization error")
