@@ -1,7 +1,8 @@
 """
 TO DO LIST:
 1) Implement experiments that run longer than 65534 seconds (issue with DStat)
-2) Check logging (ultimately the problematic lines are... junk)
+2) Check that parameters were correctly uploaded
+3) Check logging (ultimately the problematic lines are... junk)
 3) Work on getting a restart to work
 4) Get the serial port to close on keyboard interrupt (does not right now)
 
@@ -27,7 +28,7 @@ gain = 1  # USER EDITED, transducer gain, see DStat documentation
 # define POT_GAIN_30M 6
 # define POT_GAIN_100M 7
 dataFile = 'Redoxotron4_Test2'  # USER EDITED, path for dataFile
-expLength = 72*60*60  # USER EDITED, Seconds, length of experiment
+expLength = 72*60*60  # USER EDITED, Seconds, length of experiment. INTEGER ONLY.
 expVolt = 1000  # USER EDITED, mV, target voltage
 reportTime = 300  # USER EDITED, Seconds, time for reporting averages
 
@@ -204,6 +205,18 @@ def setDStatParams(ser, gain=2, logFile=None):
         print("Problems with Serial Port, Parameters are not uploaded")
         return False, False
 
+
+def initializeExperiment(ser, expLength, expVolt, logFile=None,
+                         timeFmtStr='%m/%d/%Y %H:%M:%S.%f'):
+    maxLength = 65534
+    if expLength > maxLength:
+        print('Experiment length is too long for single step, will be run in multiple steps')
+        nSteps = int(expLength/maxLength)
+        stepArray = [65534]*nSteps  # Initialize array of time steps
+        if expLength % maxLength > 0:
+            nSteps += 1
+            stepArray.append(expLength % maxLength)
+        voltArray = [int(65536.0/3000*expVolt+32768)]*nSteps
 
 def resetDStat(ser):
     print('WARNING: FUNCTION WILL LIKELY FAIL')
