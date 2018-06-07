@@ -1,11 +1,9 @@
 """
 TO DO LIST:
-1) Implement experiments that run longer than 65534 seconds (issue with DStat)
-2) Check that parameters were correctly uploaded
+1) Repeat data file handling: Currently appends, which is incorrect behavior, want to create a new file each time
+2) Add option to average data over time
 3) Check logging (ultimately the problematic lines are... junk)
-3) Work on getting a restart to work
-4) Get the serial port to close on keyboard interrupt (does not right now)
-
+4) Work on getting a restart to work
 """
 import serial
 import time
