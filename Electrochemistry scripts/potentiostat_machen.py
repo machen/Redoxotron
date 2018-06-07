@@ -1,9 +1,8 @@
 """
 TO DO LIST:
-1) Repeat data file handling: Currently appends, which is incorrect behavior, want to create a new file each time
-2) Add option to average data over time
-3) Check logging (ultimately the problematic lines are... junk)
-4) Work on getting a restart to work
+1) Add option to average data over time
+2) Check logging (ultimately the problematic lines are... junk)
+3) Work on getting a restart to work
 """
 import serial
 import time
@@ -53,6 +52,21 @@ class ExperimentalError(Error):
     """Error class for failed experiment"""
     def __init__(self, message):
         self.message = message
+
+
+def fileNameCheck(filePath, num=0, ext=".csv"):
+    """Function will check for correct file path, and append a new file name"""
+    if num == 0:
+        path = filePath
+    elif num == 1:
+        path = filePath+"_{}".format(num)
+    elif num > 1:
+        path = filePath.replace("_{}".format(num-1), "_{}".format(num))
+    if os.path.isfile(path+ext):
+        path = fileNameCheck(path, num+1)
+        return path
+    else:
+        return path+ext
 
 
 def writeCmdLog(logFile, type, cmd, timeFmt='%m/%d/%Y %H:%M:%S.%f',
@@ -314,12 +328,8 @@ def runExperiment(ser, expLength, gain, expVolt, logFile=None,
             return False
         print('Experimental parameters uploaded')
         startTime = dt.datetime.today()
-        # Create dataFile
-        if os.path.isfile(dataFile+'.csv'):
-            # Make a new file if the data file already exists
-            dataFile = dataFile+'new.csv'
-        else:
-            dataFile = dataFile+'.csv'
+        # Create dataFile, check for copies and fix file name
+        dataFile = fileNameCheck(dataFile)
         with open(dataFile, 'a') as outFile:
             dataWriter = csv.writer(outFile, dialect='excel')
             dataWriter.writerow(['Experimental start: ' +
