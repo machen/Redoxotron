@@ -1,7 +1,8 @@
 """
 TO DO LIST:
 1) Add option to average data over time
-2) Check logging (ultimately the problematic lines are... junk)
+2) Fix output of times for multistage experiment (currently, times reset after max)
+3) Check logging (ultimately the problematic lines are... junk)
 3) Work on getting a restart to work
 """
 import serial
