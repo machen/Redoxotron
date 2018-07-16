@@ -13,9 +13,14 @@ import struct
 import csv
 import os.path
 
-logFile = 'Redoxotron4_Test2_CmdLog.log'  # USER EDITED, path for output log
-serialPort = '/dev/ttyACM0'  # USER EDITED, path to serial port
-gain = 1  # USER EDITED, transducer gain, see DStat documentation
+"""Script will end on its own, however, if it needs to terminated prematurely,
+ctrl+C will cleanly close the serial port."""
+
+"""SCRIPT PARAMETERS HERE"""
+
+logFile = 'Redoxotron4_Test2_CmdLog.log'  # USER EDITED, Defined path for log of commands between DStat and Script
+serialPort = '/dev/ttyACM0'  # USER EDITED, Path to serial port. To check if it's there, run in a terminal: "python -m serial.tools.list_ports"
+gain = 1  # USER EDITED, transducer gain, see DStat documentation.
 # Gains allowed by dstat. use lowest value to detect targeted current diffs
 # define POT_GAIN_0 0
 # define POT_GAIN_100 1
@@ -27,9 +32,15 @@ gain = 1  # USER EDITED, transducer gain, see DStat documentation
 # define POT_GAIN_100M 7
 dataFile = 'Redoxotron4_Test2'  # USER EDITED, path for dataFile
 expLength = 72*60*60  # USER EDITED, Seconds, length of experiment. INTEGER ONLY.
-expVolt = 1000  # USER EDITED, mV, target voltage
+"""Note that experimental times greater than ~65000 seconds will be broken into multiple experiments,
+which will have to be adjusted during data handling. An example will be given.
+"""
+expVolt = 1000  # USER EDITED, mV, target voltage. Positive voltages are oxidizing, negative voltages are reducing
 reportTime = 300  # USER EDITED, Seconds, time for reporting averages
 
+"""MAIN SCRIPT HERE, ALTER AT YOUR OWN RISK"""
+
+"""ERROR CLASS DEFINITIONS. USED FOR ERROR HANDLING"""
 
 class Error(Exception):
     """ Base class for exceptions. """
@@ -56,7 +67,19 @@ class ExperimentalError(Error):
 
 
 def fileNameCheck(filePath, num=0, ext=".csv"):
-    """Function will check for correct file path, and append a new file name"""
+    """Recursive function checks to see if a file exists by filePath+ext,
+    and if it does, returns a path with a number added, which is automatically
+    incremented. For example: If "test.csv" exists, then the returned path
+    will be "text_1.csv"
+
+    VARIABLES:
+
+    filePath: String defining the path to the log file, without the extension
+    num: Int. Iteration number. Should not need to be specified when calling the function.
+    ext: String. The defined file path extension.
+
+    RETURNS: A string, containing a complete, non-redundant file path
+    """
     if num == 0:
         path = filePath
     elif num == 1:
@@ -72,6 +95,21 @@ def fileNameCheck(filePath, num=0, ext=".csv"):
 
 def writeCmdLog(logFile, type, cmd, timeFmt='%m/%d/%Y %H:%M:%S.%f',
                 time=dt.datetime.today()):
+    """Function writes the given command to the command log using a time stamp
+    and indicating who sent the command (user to Dstat vs Dstat to user)
+
+    VARIABLES:
+    logFile: String. File path for the command log. Include the extension!
+    Type: Either "User" or "DStat". Other commands will be logged, but without
+    indication of who wrote the command.the
+    cmd: String. Command to be written. Generally, this should be string converted output
+    directly from the dstat, or strings written to the dstat (not raw).
+    timeFmt: String for formatting the times. Default is "m/d/y H:M:S.s"
+    time: DateTime. Time command was logged. Defaults to time the command is called.
+
+    RETURNS: Nothing.
+
+    """
     if not logFile:
         return
     with open(logFile, 'a') as log:
@@ -85,14 +123,27 @@ def writeCmdLog(logFile, type, cmd, timeFmt='%m/%d/%Y %H:%M:%S.%f',
 
 
 def sendCommand(ser, cmd, tries=10, logFile=None):
-    # sendCommand only sends the command and checks that it's been received properly
-    # Checking of the responses (ie for issues with parameters) need to be handled outside of the function
+    """# sendCommand only sends the command and checks that it's been received properly.
+    Checking of the responses (ie for issues with parameters)
+    need to be handled outside of the function.
+    Notably this handles the transmission protocol for the dstat, which requires
+    writing "!n\n" where n is the number of characters you want to send
+
+    VARIABLES:
+    ser: Serial object. Serial port object for the DStat.
+    cmd: String. Command to send. Include only the letters (ie. EA or R).
+    tries: Int. Number of attempts to send the command
+    logFile: String. Path to command log
+
+    RETURN: True for successful command write and receive, False for failure.
+    Note success requires a) writing the command, and b) receiving the correct replies.
+    """
     cmd = cmd.rstrip()
     ser.reset_input_buffer()
     cmdInitStr = b'!'+str(len(cmd)).encode("UTF-8")+b'\n'
     ser.write(cmdInitStr)  # Write initiator command
     writeCmdLog(logFile, 'User', cmdInitStr.decode())
-    if len(cmd) == 0:  # 0 len cmd gives only a test. This tests for response
+    if len(cmd) == 0:  # 0 len cmd gives only a test. This tests for response only.
         for i in range(tries):
             reply = ser.readline()
             writeCmdLog(logFile, 'DStat', reply.decode())
@@ -125,7 +176,7 @@ def sendCommand(ser, cmd, tries=10, logFile=None):
                 ser.write(cmdInitStr)
                 writeCmdLog(logFile, 'User', cmdInitStr)
                 time.sleep(0.1)
-    else:
+    else: # Handles all other commands.
         for i in range(tries):
             ackRpl = b'@ACK '+str(len(cmd)).encode("UTF-8")
             reply = ser.readline()
@@ -159,6 +210,17 @@ def sendCommand(ser, cmd, tries=10, logFile=None):
 
 
 def initializeDStat(path, timeout=3, logFile=None):
+    """Initializes the DStat, and runs a blank command test to make
+    sure the DStat is ready for read/write
+
+    VARIABLES:
+
+    Path: String defining the serial port path.
+    timeout: Int or float defining timeout for serial port
+    LogFile: String for the command log.
+
+    RETURNS: Serial object for DStat. If it fails, a serial exception is raised."""
+
     try:
         for i in range(0, 10):
             ser = serial.Serial(path, rtscts=True, timeout=timeout,
@@ -190,6 +252,17 @@ def initializeDStat(path, timeout=3, logFile=None):
 
 
 def readParamResponse(ser, logFile=None, time=dt.datetime.today()):
+    """Reads the parameter responses from the DStat. Correctly upload parameters
+    should recieve a specific reply ultimately. If not recieved, then parameter upload has failed.
+
+    VARIABLES:
+
+    Ser: Serial port object for the DStat. Should already be open.be
+    logFile: String. Path to the command log.
+    Time: Datetime. Defaults to time of function call.
+
+    RETURNS: True for successful parameter reply sequence. False for failed.
+    """
     reply = ser.readlines()
     for line in reply:
         if line.startswith(b'#'):
@@ -204,6 +277,19 @@ def readParamResponse(ser, logFile=None, time=dt.datetime.today()):
 
 
 def setDStatParams(ser, gain=2, logFile=None):
+    """Sets the gain and ADC settings as specified in the user parameter section.
+
+    VARIABLES:
+
+    ser: Serial object for DStat
+    Gain: DStat gain value (see table in user edited section). Default is 2.
+    logFile: String to command log.
+
+    RETURNS: adcResp, gainResp, booleans corresponding to the succcess of
+    setting the parameters.
+
+    """
+
     try:
         # Try set adc
         adcSet = sendCommand(ser, 'EA2 03 1')  # No need to change ADC settings
@@ -226,6 +312,20 @@ def setDStatParams(ser, gain=2, logFile=None):
 
 def initializeExperiment(ser, expLength, expVolt, logFile=None,
                          timeFmtStr='%m/%d/%Y %H:%M:%S.%f'):
+    """Initializes the experiment on the DStat.
+    Correctly handles experimental times that are too long for DStat.for
+
+    VARIABLES:
+
+    ser: Serial port object for the DStat
+    expLength: Int. Number of seconds to run the experiment.the
+    expVolt: Experimental voltage setpoint in millivolts. Negative is reducing, positive is oxidizing.
+    logFile: String to path for the command log.
+    timeFmtStr: Format for writing time formats.
+
+    RETURNS: True for successful experimental initialization, False otherwise.
+    """
+
     maxLength = 65534
     if expLength > maxLength:
         print('Experiment length is too long for single step, will be run in multiple steps')
@@ -300,6 +400,8 @@ def initializeExperiment(ser, expLength, expVolt, logFile=None,
 
 
 def resetDStat(ser):
+    """Is supposed to reset the DStat, however, the function has not
+    successfully done this."""
     print('WARNING: FUNCTION WILL LIKELY FAIL')
     path = ser.name
     attempt = sendCommand(ser, 'R')
@@ -312,6 +414,17 @@ def resetDStat(ser):
 
 
 def convertCurrent(adcCode, gain, pgaGain=2):
+    """Function automatically converts current values from digital values to Amps
+
+    VARIABLES:
+    adcCode: Digital adc current value returned by the DStat
+    Gain: INT. Gain value definied in user parameters. Do not use the actual value this
+    corresponds to.
+    pgaGain: Adjustable pgaGain if necessary. However, this should not need to be adjusted.
+    Default value is 2.
+
+    RETURNS: Float, corresponding to the current in Amps
+    """
     # Assumes that PGA value is 2. Will need to edit otherwise.
     gainValues = {0: 1, 1: 100, 2: 3000, 3: 3E4, 4: 3E5, 5: 3E6, 6: 3E7,
                   7: 1E8}
@@ -322,6 +435,35 @@ def convertCurrent(adcCode, gain, pgaGain=2):
 def runExperiment(ser, expLength, gain, expVolt, logFile=None,
                   dataFile='Test', rptTime=300,
                   timeFmtStr='%m/%d/%Y %H:%M:%S.%f'):
+        """Runs the experiment, specifically, it runs the experiment
+        initialization, and gathers data until the completion code is sent
+        by the DStat.
+
+        A new data file is created, in which the experimental parameters (voltage,
+        start time, gain) are written, then the actual data written
+
+        Data is append to the data file, contining the elapsed experimental time
+        and the measured current at that time.
+
+        Additionally, the script reports an averaged current in a user defined
+        reporting time, though this averaging is NOT done to the raw data.
+
+        The only thing this script will NOT catch is if the DStat stalls. If you are not
+        receiving data on the report time specified, then you must reset the script.
+
+        VARIABLES:
+        ser: Serial port object for DStat
+        expLength: Int. Experimental time in seconds
+        gain: Int. Gain value corresponding to the table in the user params.
+        expVolt: Experimental voltage, mV.
+        logFile: String, command log file path
+        rptTime: Float or int. Time for averaging current, this does not affect
+        outputted data.
+        timeFmtStr: String. Formatting string for times.
+
+        RETURNS: Boolean for successful experimental completion.
+
+        """
         expStart = initializeExperiment(ser, expLength, expVolt,
                                         logFile=logFile)
         if not expStart:
@@ -331,6 +473,7 @@ def runExperiment(ser, expLength, gain, expVolt, logFile=None,
         startTime = dt.datetime.today()
         # Create dataFile, check for copies and fix file name
         dataFile = fileNameCheck(dataFile)
+        # Write experimental parameters to dataFile
         with open(dataFile, 'a') as outFile:
             dataWriter = csv.writer(outFile, dialect='excel')
             dataWriter.writerow(['Experimental start: ' +
@@ -347,7 +490,8 @@ def runExperiment(ser, expLength, gain, expVolt, logFile=None,
         writeCmdLog(logFile, 'User', 'Experiment Start', timeFmt=timeFmtStr,
                     time=startTime)
         reply = ser.readline()
-        print('Entering main expeirmental loop')
+        print('Entering main experimental loop')
+        # Run data collection until ending command is sent by the DStat
         while reply.rstrip() != b'@DONE':
             if ser.in_waiting == 0:
                 time.sleep(0.1)
@@ -404,8 +548,10 @@ def runExperiment(ser, expLength, gain, expVolt, logFile=None,
 timeFmtStr = '%m/%d/%Y %H:%M:%S.%f'
 gainValues = {0: 1, 1: 100, 2: 3000, 3: 3E4, 4: 3E5, 5: 3E6, 6: 3E7,
               7: 1E8}
-with initializeDStat(serialPort, logFile=logFile) as ser:  # Ensures closure of port on failure
+with initializeDStat(serialPort, logFile=logFile) as ser:
+    # Ensures closure of port on failure or keyboard interrupt
     print('DStat Initialized')
+    # Write the DStat version info to script
     sendCommand(ser, 'V')
     print(ser.readlines())
     adcSet, gainSet = setDStatParams(ser, gain=gain, logFile=logFile)
