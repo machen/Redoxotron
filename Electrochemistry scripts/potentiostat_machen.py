@@ -30,13 +30,13 @@ gain = 1  # USER EDITED, transducer gain, see DStat documentation.
 # define POT_GAIN_3M 5
 # define POT_GAIN_30M 6
 # define POT_GAIN_100M 7
-dataFile = 'Redoxotron4_Test2'  # USER EDITED, path for dataFile
+dataFile = 'Redoxotron4_Test'  # USER EDITED, path for dataFile
 expLength = 72*60*60  # USER EDITED, Seconds, length of experiment. INTEGER ONLY.
 """Note that experimental times greater than ~65000 seconds will be broken into multiple experiments,
 which will have to be adjusted during data handling. An example will be given.
 """
 expVolt = 1000  # USER EDITED, mV, target voltage. Positive voltages are oxidizing, negative voltages are reducing
-reportTime = 300  # USER EDITED, Seconds, time for reporting averages
+reportTime = 300  # USER EDITED, Seconds, time for reporting the average of current over the whole experiment
 
 """MAIN SCRIPT HERE, ALTER AT YOUR OWN RISK"""
 
